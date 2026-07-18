@@ -13,7 +13,7 @@ El dashboard presenta KPIs de fulfillment (órdenes, rating, order lost, replace
 ## Actualización de datos
 
 - La información *underlying* se actualizará de forma **diaria** a través de la **descarga automática de un Data Studio externo** (owner: PeYa).
-- El **procesamiento y compilación** de esa información hacia **Google Sheets** se realiza mediante un **flujo de n8n**.
+- El **procesamiento y compilación** de esa información hacia **Google Sheets** se realizará en una segunda fase mediante un **flujo de n8n**.
 - El dashboard (este proyecto) lee el Google Sheet resultante y se reconstruye/despliega con los datos más recientes.
 
 ## Stack
