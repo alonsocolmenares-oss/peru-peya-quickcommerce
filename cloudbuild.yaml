@@ -1,0 +1,21 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--source=.'
+      - '--region=us-central1'
+      - '--project=zb-firebase-projects-poc'
+      - '--service-account=cloud-deploy@zb-firebase-projects-poc.iam.gserviceaccount.com'
+      - '--allow-unauthenticated'
+      # STEP 4: Pin the stable runtime (lowest LTS present on the google-24 builder: 22.x.x / 24.x.x)
+      - '--set-build-env-vars=GOOGLE_RUNTIME_VERSION=22'
+      # STEP 5: No public configs or secrets required — this is a static dashboard
+      # with no external API calls and no runtime environment variables.
+options:
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _SERVICE_NAME: 'peru-peya-dashboard-poc'
+  # No sensitive secrets required for this service — nothing for TechOps to fill in here.
