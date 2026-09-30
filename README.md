@@ -13,19 +13,29 @@ El dashboard presenta KPIs de fulfillment (órdenes, rating, order lost, replace
 ## Actualización de datos
 
 - La información *underlying* se actualizará de forma **diaria** a través de la **descarga automática de un Data Studio externo** (owner: PeYa).
-- El **procesamiento y compilación** de esa información hacia **Google Sheets** se realizará en una segunda fase mediante un **flujo de n8n**.
+- El **procesamiento y compilación** de esa información hacia **Google Sheets** se realiza mediante un **flujo de n8n**.
 - El dashboard (este proyecto) lee el Google Sheet resultante y se reconstruye/despliega con los datos más recientes.
 
 ## Stack
 
-- Sitio estático (HTML/CSS/JS, sin build step) servido por un pequeño servidor Express (`server.js`), necesario únicamente para satisfacer el requisito de Cloud Buildpacks de detectar un runtime y exponer el proceso en `$PORT`.
-- Sin variables de entorno ni secretos requeridos en runtime.
+- Sitio estático (`index.html`, sin build step) servido por un pequeño servidor Express (`server.js`) en `$PORT`.
+- `server.js` hace de proxy hacia los webhooks de n8n, así el navegador nunca ve las credenciales:
+
+| Ruta | Variable con la URL de n8n |
+|---|---|
+| `/api/dashboard-data` | `N8N_DASHBOARD_URL` |
+| `/api/peya-hourly-data` | `N8N_HOURLY_URL` |
+| `/api/peya-times-data` | `N8N_TIMES_URL` (si está vacía, usa `N8N_HOURLY_URL`) |
+| `/api/plan-data` | `N8N_PLAN_URL` |
+
+- Credenciales de n8n (Basic Auth) desde Secret Manager: `N8N_WEBHOOK_USER`, `N8N_WEBHOOK_PASSWORD`.
 
 ## Desarrollo local
 
 ```bash
 npm install
-npm start
+N8N_DASHBOARD_URL=... N8N_HOURLY_URL=... N8N_PLAN_URL=... \
+N8N_WEBHOOK_USER=... N8N_WEBHOOK_PASSWORD=... npm start
 ```
 
 El servidor escucha en `process.env.PORT` (por defecto `8080` si no está definido).
