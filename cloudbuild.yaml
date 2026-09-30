@@ -17,19 +17,10 @@ steps:
       # Cloud Run (cloud-deploy@...) necesita el rol "Secret Manager Secret Accessor"
       # sobre estos dos secrets para poder leerlos.
       - '--update-secrets=N8N_WEBHOOK_USER=N8N_WEBHOOK_USER:latest,N8N_WEBHOOK_PASSWORD=N8N_WEBHOOK_PASSWORD:latest'
-      # STEP 6: URLs de los webhooks de n8n a los que server.js hace de proxy. Se definen como
-      # substitutions (abajo o en el trigger de Cloud Build). Si N8N_TIMES_URL queda vacia,
-      # /api/peya-times-data usa la misma URL que Hourly Ops.
-      - '--update-env-vars=N8N_DASHBOARD_URL=${_N8N_DASHBOARD_URL},N8N_HOURLY_URL=${_N8N_HOURLY_URL},N8N_TIMES_URL=${_N8N_TIMES_URL},N8N_PLAN_URL=${_N8N_PLAN_URL}'
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   _SERVICE_NAME: 'peru-peya-dashboard-poc'
-  # URLs de los webhooks de n8n (completar aqui o sobrescribir en el trigger de Cloud Build):
-  _N8N_DASHBOARD_URL: ''
-  _N8N_HOURLY_URL: ''
-  _N8N_TIMES_URL: ''
-  _N8N_PLAN_URL: ''
   # Secrets requeridos (creados en Secret Manager por el equipo de infra):
   #   N8N_WEBHOOK_USER
   #   N8N_WEBHOOK_PASSWORD
