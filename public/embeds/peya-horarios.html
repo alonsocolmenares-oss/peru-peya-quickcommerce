@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Horarios PeYa x Zubale</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗓️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Paleta exacta de Hourly Metrics/Times: fondo de pagina gris-azulado muy claro,
+     cards blancos, azul oscuro/azul primario/verde/rojo/rosa/purpura de marca.
+     Sin modo oscuro: esta hoja, igual que las demas pestañas del dashboard, es
+     siempre clara sin importar la preferencia del sistema operativo. */
+  --navy:#02015D; --blue:#0043FC; --sky:#A9C2FC; --ice:#EEF3FF;
+  --bg:#f7f8fc; --panel:#FFFFFF; --ink:#02015D; --muted:#6b6f9a; --line:#e4e6f5;
+  --rest:#EDEFF5; --restInk:#8A90AE; --warn:#ec3223; --warnBg:#FDECEA;
+  --zb-green:#62b275; --zb-pink:#c02c84; --zb-purple:#8329a5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Lexend,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:400;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:3px solid var(--navy);padding-bottom:18px;margin-bottom:22px}
+h1{margin:0;font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.week{display:inline-block;background:var(--blue);color:#fff;font-weight:600;border-radius:8px;padding:2px 10px;margin-left:6px;font-size:.6em;vertical-align:middle}
+.sub{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+.kpis{display:flex;gap:22px}
+.kpi b{display:block;font-size:1.5rem;font-weight:600}
+.kpi span{color:var(--muted);font-size:.8rem}
+.chains{display:grid;gap:14px;margin-bottom:22px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.chain h2{margin:0 6px 0 0;font-size:.85rem;font-weight:600;color:var(--muted);min-width:56px}
+button.store{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 13px;cursor:pointer}
+button.store:hover{border-color:var(--blue)}
+button.store[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+button:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.toggle{font:inherit;font-size:.85rem;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:22px}
+.card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.card-head h3{margin:0;font-size:1.3rem;font-weight:600}
+.card-head p{margin:0;color:var(--muted);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:4px;width:100%;min-width:860px}
+th{font-size:.78rem;font-weight:500;color:var(--muted);text-align:center;padding:4px}
+th.name{text-align:left}
+td{padding:0}
+td.person{padding:6px 8px;background:var(--panel);border-radius:8px;min-width:230px}
+td.person b{display:block;font-weight:500;font-size:.88rem}
+td.person small{color:var(--muted);font-size:.74rem}
+td.person.senior{box-shadow:inset 4px 0 0 var(--blue)}
+.shift{display:flex;align-items:center;justify-content:center;height:44px;border-radius:8px;font-size:.82rem;font-weight:500;white-space:nowrap}
+.m{background:var(--sky);color:var(--navy)}
+.i{background:var(--blue);color:#fff}
+.t{background:var(--navy);color:#fff}
+.p{background:var(--panel);color:var(--blue);border:2px dashed var(--blue)}
+.d{background:repeating-linear-gradient(135deg,var(--rest),var(--rest) 6px,transparent 6px,transparent 11px);color:var(--restInk);font-weight:400}
+tr.cov td{padding:6px 4px;text-align:center;font-size:.76rem;color:var(--muted);border-top:2px solid var(--line)}
+tr.cov td:first-child{text-align:left;font-weight:500;color:var(--ink)}
+.flags{margin:12px 0 0;padding:10px 14px;background:var(--warnBg);color:var(--warn);border-radius:10px;font-size:.82rem}
+.flags ul{margin:4px 0 0;padding-left:18px}
+footer{color:var(--muted);font-size:.78rem;margin-top:10px}
+.views{display:inline-flex;background:var(--panel);border-radius:10px;padding:3px;gap:3px}
+.views button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 14px;cursor:pointer}
+.views button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+table.heat{min-width:640px;border-spacing:3px}
+table.heat th.hr{text-align:right;padding-right:10px;white-space:nowrap;font-size:.76rem}
+.cell{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;font-size:.85rem;font-weight:600}
+.c0{background:var(--rest);color:var(--restInk);font-weight:400}
+.c1{background:#DCE6FE;color:var(--navy)}
+.c2{background:var(--sky);color:var(--navy)}
+.c3{background:#5C86FD;color:#fff}
+.c4{background:var(--blue);color:#fff}
+.c5{background:var(--navy);color:#fff}
+.s1{background:#EEDCF3;color:#4A1560}
+.s2{background:#D9AEE6;color:#3A1050}
+.s3{background:#B366CC;color:#fff}
+.s4{background:#9A3DBE;color:#fff}
+.s5{background:var(--zb-purple);color:#fff}
+.hlegend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:12px;font-size:.78rem;color:var(--muted)}
+.hlegend .ramp{display:inline-flex;gap:2px;vertical-align:middle;margin-left:6px}
+.hlegend .ramp i{width:18px;height:14px;border-radius:3px;display:inline-block}
+.peak{margin:0 0 12px;font-size:.85rem;color:var(--muted)}
+.peak b{color:var(--ink);font-weight:600}
+table.ampm{min-width:900px;border-collapse:collapse;border-spacing:0;background:var(--panel)}
+table.ampm th,table.ampm td{border:1px solid var(--line);text-align:center;padding:9px 6px}
+table.ampm thead th{background:var(--ice);color:var(--navy);font-weight:600;font-size:.8rem;letter-spacing:.04em}
+table.ampm thead tr:first-child th.day{font-size:.85rem}
+table.ampm th.store{text-align:left;padding-left:14px;font-weight:600;font-size:.85rem;letter-spacing:.02em;white-space:nowrap}
+table.ampm td{font-size:.95rem;font-weight:500}
+table.ampm td.sr{background:#CDEBFF;color:var(--navy)}
+.srkey{display:inline-block;width:14px;height:14px;border-radius:3px;background:#CDEBFF;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
+table.ampm tfoot td,table.ampm tfoot th{background:var(--ice);font-weight:700;border-top:3px solid var(--navy)}
+/* Columna de Tienda fija al hacer scroll horizontal (aplica a ambas tablas .ampm:
+   "Programacion de personal" y "Asistencia: Planificacion vs Real"). */
+table.ampm th.store{position:sticky;left:0;z-index:2;background:var(--panel);border-right:2px solid var(--line)}
+table.ampm thead th.store{z-index:4}
+table.ampm tfoot th.store{z-index:3;background:var(--ice)}
+table.ampm th.grp-real{border-left:3px solid var(--blue)}
+table.ampm td.grp-real{border-left:3px solid var(--line)}
+table.ampm tfoot td.grp-real{border-left:3px solid var(--blue)}
+table.ampm td.diff-ok{color:var(--muted)}
+table.ampm td.diff-neg{color:var(--warn);font-weight:700;background:var(--warnBg)}
+table.ampm td.diff-pos{color:var(--zb-green);font-weight:700;background:#EAF7EE}
+
+/* Tabla de asistencia (Plan/Real/Dif.): columnas parejas + separadores entre
+   turnos (AM|PM) y entre dias. width:max-content evita que el navegador
+   comprima las 43 columnas para que quepan en el contenedor -- con table-layout
+   fixed y sin esto, el texto de los encabezados queda amontonado/ilegible.
+   El scroll horizontal del contenedor .scroll se encarga del resto. */
+table.att-compare{table-layout:fixed;width:max-content}
+table.att-compare th.store,table.att-compare td.store{width:170px;min-width:170px}
+table.att-compare th:not(.store),table.att-compare td:not(.store){width:64px;min-width:64px;padding:8px 4px;font-size:.78rem}
+table.att-compare tbody td{font-size:.88rem;font-weight:600}
+table.att-compare .day-sep{border-left:3px solid var(--navy)}
+table.att-compare .period-sep{border-left:1.5px dashed var(--blue)}
+.note{font-size:.8rem;color:var(--muted);margin:12px 0 0}
+@media (max-width:640px){.kpis{gap:14px}.card{padding:14px}}
+
+.logout{font:inherit;font-size:.8rem;background:transparent;border:1.5px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+html,body{height:100%}
+.weeksel{font:inherit;font-size:.8rem;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px}
+.logout:disabled{opacity:.6;cursor:wait}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <h1>Horarios PeYa x Zubale <span class="week" id="weekTag"></span></h1>
+      <p class="sub" id="sub">Zubale Perú · Turnos de lunes a domingo por zubalero</p>
+    </div>
+    <div style="display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap">
+      <div class="kpis" id="kpis"></div>
+      <div class="actions">
+        <select id="weekSel" class="weeksel" aria-label="Semana"></select>
+        <button class="logout" id="refresh" type="button">Actualizar</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="chains" id="chains" aria-label="Tiendas"></nav>
+
+  <div class="toolbar">
+    <div class="legend" id="legend">
+      <span><i class="m"></i>Mañana</span>
+      <span><i class="i"></i>Intermedio</span>
+      <span><i class="t"></i>Tarde</span>
+      <span><i class="p" style="border-width:1.5px"></i>Parcial (menos de 8 h)</span>
+      <span><i class="d"></i>Descanso</span>
+    </div>
+    <div class="actions">
+      <div class="views" role="group" aria-label="Tipo de vista">
+        <button type="button" data-v="detalle" aria-pressed="true">Detalle</button>
+        <button type="button" data-v="resumen" aria-pressed="false">Resumen por hora</button>
+        <button type="button" data-v="ampm" aria-pressed="false">Resumen AM / PM</button>
+      </div>
+      <button class="toggle" id="toggle" type="button">Ver todas las tiendas</button>
+    </div>
+  </div>
+
+  <main id="out"></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/* ============================================================
+   Fuente de datos: /api/plan-data (proxy en server.js -> webhook n8n,
+   solo registros con _source = "plan").
+   Campos esperados por registro (nombres flexibles, sin importar
+   mayúsculas, tildes ni espacios):
+     SEMANA · TIENDA · ZUBALERO · ROL · LUNES … DOMINGO
+   Turnos: "14 - 22", "08:00 - 16:00", "DESCANSO".
+   ============================================================ */
+const API_URL = "/api/plan-data";
+const DAYS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+const DAY_KEYS = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"];
+const FIELDS = {
+  week:  ["semana","week","sem","nsemana"],
+  store: ["tienda","store","local","sucursal"],
+  name:  ["zubalero","nombre","name","picker","colaborador"],
+  role:  ["rol","role","cargo","puesto"]
+};
+
+// Ajustes manuales del resumen AM/PM: semana -> tienda -> día (0 = Lun) -> turno -> {n, sr}
+const OVERRIDES = {
+  "40": {
+    "Wong Chacarilla":   { 0: { am: { n: 3 } } },
+    "Metro Plaza Norte": { 0: { pm: { n: 2, sr: false } } }
+  }
+};
+
+const norm = k => String(k).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const clean = v => String(v ?? "").replace(/\s+/g, " ").trim();
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const pick = (o, keys) => { for (const k of keys) if (o[k] !== undefined && o[k] !== null && clean(o[k]) !== "") return clean(o[k]); return ""; };
+
+function parseShift(v){
+  const s = clean(v);
+  if (!s || /desc|libre|off/i.test(s)) return "D";
+  const m = s.match(/(\d{1,2})(?::\d{2})?\s*(?:-|–|a)\s*(\d{1,2})/i);
+  return m ? `${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}` : "D";
+}
+function toRow(rec){
+  const o = {};
+  for (const [k, v] of Object.entries(rec)) o[norm(k)] = v;
+  return {
+    week: pick(o, FIELDS.week).replace(/\.0+$/, ""),
+    store: pick(o, FIELDS.store),
+    name: pick(o, FIELDS.name),
+    role: pick(o, FIELDS.role),
+    shifts: DAY_KEYS.map(d => parseShift(o[d]))
+  };
+}
+const isSenior = r => /senior/i.test(r.role);
+
+/* ---------- Asistencia real (_source="real"): Fecha, Hora de Ingreso, Hora de
+   Salida, Tienda, Tipo de Zubalero, WEEK. Los horarios pueden venir en varios
+   formatos: entero ("8","16"), 12h con a.m./p.m. ("2:00:00 p.m."), o 24h con
+   dos puntos ("14:00"). parseHourFlexible cubre los tres. */
+function parseHourFlexible(v){
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number"){
+    if (!Number.isFinite(v)) return null;
+    if (v >= 0 && v < 1) return v * 24; // fraccion de dia (serial de Google Sheets)
+    if (v >= 0 && v < 48) return v;     // ya es una hora
+    return null;
+  }
+  const s = String(v).trim().toLowerCase();
+  if (!s) return null;
+  if (/^\d{1,2}$/.test(s)) return parseInt(s, 10); // "8", "16"
+  let m = s.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap])\.?\s*m\.?$/); // 12h a.m./p.m.
+  if (m){
+    let h = parseInt(m[1], 10);
+    const min = m[2] ? parseInt(m[2], 10) : 0;
+    const isPM = m[3] === "p";
+    if (h === 12) h = 0;
+    if (isPM) h += 12;
+    return h + min / 60;
+  }
+  m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/); // 24h "14:00" / "08:00:00"
+  if (m) return parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+  return null;
+}
+
+// Fecha puede venir como "d/m/aaaa", ISO "aaaa-mm-dd", o un serial de Google Sheets.
+function parseFechaToDate(v){
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number" && Number.isFinite(v) && v > 1000){
+    const epoch = new Date(Date.UTC(1899, 11, 30));
+    epoch.setUTCDate(epoch.getUTCDate() + Math.floor(v));
+    return epoch;
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  return null;
+}
+// Lunes=0 ... Domingo=6 (mismo orden que DAYS/DAY_KEYS en este archivo).
+const weekdayMonFirst = d => (d.getUTCDay() + 6) % 7;
+
+function toAttendanceRow(rec){
+  const o = {};
+  for (const [k, v] of Object.entries(rec)) o[norm(k)] = v;
+  return {
+    date: parseFechaToDate(o["fecha"]),
+    store: clean(o["tienda"]),
+    role: clean(o["tipodezubalero"]),
+    week: clean(o["week"]).replace(/\.0+$/, ""),
+    ingresoH: parseHourFlexible(o["horadeingreso"]),
+    salidaH: parseHourFlexible(o["horadesalida"]),
+  };
+}
+
+/* ---------- Estado ---------- */
+let ALL = [], rows = [], stores = [], chains = [];
+let REAL_ALL = [], realRows = [];
+let week = "", current = "", all = false, view = "detalle";
+
+const $ = id => document.getElementById(id);
+const out = $("out"), nav = $("chains"), tg = $("toggle"), legend = $("legend"), foot = $("foot");
+const chainOf = s => s.split(" ")[0];
+
+/* ---------- Helpers de turnos ---------- */
+function kind(s){
+  if (s === "D") return "d";
+  const [a,b] = s.split("-").map(Number);
+  if (b - a < 8) return "p";
+  if (a <= 9) return "m";
+  if (a <= 11) return "i";
+  return "t";
+}
+const label = s => s === "D" ? "Descanso" : s.replace("-", " – ");
+const HOURS = Array.from({length:14}, (_,i) => 8 + i);
+const hh = h => String(h).padStart(2,"0") + ":00";
+function working(s, h){ if (s === "D") return false; const [a,b] = s.split("-").map(Number); return h >= a && h < b; }
+const short = s => s.replace(/^(Metro|Tottus|Wong|Plaza Vea|Vivanda)\s+/i, "").replace(/^MFC\s+/i, "").replace(/\s*\(.*\)$/, "");
+const isAM = s => s !== "D" && Number(s.split("-")[0]) < 14;
+
+/* ---------- Vista Detalle ---------- */
+function card(store){
+  const list = rows.filter(r => r.store === store);
+  const flags = [];
+  list.forEach((r,i) => {
+    const rests = r.shifts.filter(s => s === "D").length;
+    if (!r.name) flags.push(`Fila ${i+1}: turno sin zubalero asignado.`);
+    if (rests !== 1) flags.push(`${esc(r.name || "Fila " + (i+1))}: ${rests} días de descanso en la semana.`);
+  });
+  if (list.some(r => !r.role)) flags.push("Rol no informado para parte del equipo de esta tienda.");
+
+  const body = list.map(r => `
+    <tr>
+      <td class="person${isSenior(r) ? " senior" : ""}">
+        <b>${esc(r.name || "Sin asignar")}</b><small>${esc(r.role || "Rol sin informar")}</small>
+      </td>
+      ${r.shifts.map(s => `<td><div class="shift ${kind(s)}">${label(s)}</div></td>`).join("")}
+    </tr>`).join("");
+
+  const cov = DAYS.map((_,d) => {
+    const k = list.map(r => kind(r.shifts[d]));
+    const am = k.filter(x => x === "m" || x === "i").length, pm = k.filter(x => x === "t").length, pt = k.filter(x => x === "p").length;
+    return `<td>${am} mañ. / ${pm} tar.${pt ? ` / ${pt} parc.` : ""}</td>`;
+  }).join("");
+
+  return `
+  <section class="card">
+    <div class="card-head"><h3>${esc(store)}</h3><p>${list.length} zubaleros</p></div>
+    <div class="scroll"><table>
+      <thead><tr><th class="name">Zubalero</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr></thead>
+      <tbody>${body}<tr class="cov"><td>Cobertura del día</td>${cov}</tr></tbody>
+    </table></div>
+    ${flags.length ? `<div class="flags"><strong>Revisar antes de enviar</strong><ul>${flags.map(f => `<li>${f}</li>`).join("")}</ul></div>` : ""}
+  </section>`;
+}
+
+/* ---------- Vista Resumen por hora ---------- */
+function summary(store){
+  const list = rows.filter(r => r.store === store);
+  const hasRoles = list.some(r => r.role);
+  let peak = {n:0, d:0, h:8}, gaps = 0, seniorHrs = 0;
+  const body = HOURS.map(h => `
+    <tr><th class="hr" scope="row">${hh(h)} – ${hh(h+1)}</th>
+    ${DAYS.map((_,d) => {
+      const on = list.filter(r => working(r.shifts[d], h));
+      const n = on.length, sr = on.some(isSenior);
+      if (n > peak.n) peak = {n, d, h};
+      if (n === 0) gaps++;
+      if (sr) seniorHrs++;
+      const cls = n === 0 ? "c0" : (sr ? "s" : "c") + Math.min(n, 5);
+      const tip = n ? on.map(r => (r.name || "Sin asignar") + (isSenior(r) ? " (Senior)" : "")).join(", ") : "Sin cobertura";
+      return `<td><div class="cell ${cls}" title="${esc(tip)}">${n || "–"}</div></td>`;
+    }).join("")}</tr>`).join("");
+  const total = HOURS.length * 7;
+  return `
+  <section class="card">
+    <div class="card-head"><h3>${esc(store)}</h3><p>${list.length} zubaleros · Lun a Dom, 8:00 a 22:00</p></div>
+    <p class="peak">Pico: <b>${peak.n} personas</b> el ${DAYS[peak.d]} de ${hh(peak.h)} a ${hh(peak.h+1)}.
+      ${gaps ? ` <b>${gaps} franjas</b> sin cobertura.` : " Todas las franjas tienen al menos una persona."}
+      ${hasRoles ? ` Senior presente en ${Math.round(seniorHrs/total*100)}% de las horas.` : " Esta tienda no tiene roles informados, por eso no se marca Senior."}</p>
+    <div class="scroll"><table class="heat">
+      <thead><tr><th></th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+    <div class="hlegend">
+      <span>Sin Senior<span class="ramp"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><i class="c5"></i></span></span>
+      <span>Con Picker Senior<span class="ramp"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i><i class="s5"></i></span></span>
+      <span>De 1 a 5+ personas</span>
+    </div>
+  </section>`;
+}
+
+/* ---------- Vista Resumen AM / PM ---------- */
+function ampm(){
+  const tot = DAYS.map(() => [0,0]);
+  const ov = OVERRIDES[week] || {};
+  const body = stores.map(s => {
+    const list = rows.filter(r => r.store === s);
+    return `<tr><th class="store">${esc(short(s).toUpperCase())}</th>${DAYS.map((_,d) => [true,false].map((am,k) => {
+      const on = list.filter(r => r.shifts[d] !== "D" && isAM(r.shifts[d]) === am);
+      let n = on.length, sr = on.some(isSenior);
+      const o = ov[s]?.[d]?.[am ? "am" : "pm"];
+      if (o){ if (o.n !== undefined) n = o.n; if (o.sr !== undefined) sr = o.sr; }
+      tot[d][k] += n;
+      return `<td class="${sr ? "sr" : ""}">${n}</td>`;
+    }).join("")).join("")}</tr>`;
+  }).join("");
+  const footRow = tot.map(p => p.map(x => `<td>${x}</td>`).join("")).join("");
+  return `
+  <section class="card">
+    <div class="card-head"><h3>Programación de personal por tienda</h3><p>Lunes a domingo, turnos AM / PM</p></div>
+    <div class="scroll"><table class="ampm">
+      <thead>
+        <tr><th class="store" rowspan="2">TIENDA</th>${["LUNES","MARTES","MIÉRCOLES","JUEVES","VIERNES","SÁBADO","DOMINGO"].map(d => `<th class="day" colspan="2">${d}</th>`).join("")}</tr>
+        <tr>${DAYS.map(() => "<th>AM</th><th>PM</th>").join("")}</tr>
+      </thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><th class="store">TOTAL GENERAL</th>${footRow}</tr></tfoot>
+    </table></div>
+    <p class="note"><span class="srkey"></span>Turno con Picker Senior. AM: turnos que inician antes de las 14:00. PM: turnos que inician a las 14:00 o después.</p>
+  </section>`;
+}
+
+/* ---------- Asistencia: Planificacion vs Real ---------- */
+const DAY_NAMES_FULL = ["LUNES","MARTES","MIÉRCOLES","JUEVES","VIERNES","SÁBADO","DOMINGO"];
+
+function diffClass(diff){
+  if (diff === 0) return "diff-ok";
+  return diff > 0 ? "diff-pos" : "diff-neg";
+}
+function fmtDiff(diff){
+  return diff > 0 ? `+${diff}` : String(diff);
+}
+
+function attendance(){
+  const storesAtt = [...new Set([...stores, ...realRows.map(r => r.store)])];
+  // tot[d][periodo] = { plan, real }
+  const tot = DAYS.map(() => [{ plan: 0, real: 0 }, { plan: 0, real: 0 }]);
+  const ov = OVERRIDES[week] || {};
+
+  function realCount(list, dayIdx, isAmPeriod){
+    const matched = list.filter(r => r.date && weekdayMonFirst(r.date) === dayIdx
+      && r.ingresoH !== null && (r.ingresoH < 14) === isAmPeriod);
+    return { n: matched.length, sr: matched.some(r => /senior/i.test(r.role)) };
+  }
+
+  const body = storesAtt.map(s => {
+    const listPlan = rows.filter(r => r.store === s);
+    const listReal = realRows.filter(r => r.store === s);
+
+    const cells = DAYS.map((_, d) => [true, false].map((am, k) => {
+      const on = listPlan.filter(r => r.shifts[d] !== "D" && isAM(r.shifts[d]) === am);
+      let planN = on.length, planSr = on.some(isSenior);
+      const o = ov[s]?.[d]?.[am ? "am" : "pm"];
+      if (o){ if (o.n !== undefined) planN = o.n; if (o.sr !== undefined) planSr = o.sr; }
+
+      const c = realCount(listReal, d, am);
+      const diff = c.n - planN;
+      const sep = k === 0 ? (d > 0 ? " day-sep" : "") : " period-sep";
+
+      tot[d][k].plan += planN;
+      tot[d][k].real += c.n;
+
+      return `<td class="${(planSr ? "sr" : "").trim()}${sep}">${planN}</td>` +
+             `<td class="${(c.sr ? "sr" : "").trim()} grp-real">${c.n}</td>` +
+             `<td class="${diffClass(diff)}">${fmtDiff(diff)}</td>`;
+    }).join("")).join("");
+
+    return `<tr><th class="store">${esc(short(s).toUpperCase())}</th>${cells}</tr>`;
+  }).join("");
+
+  const footCells = DAYS.map((_, d) => [0, 1].map(k => {
+    const { plan, real } = tot[d][k];
+    const diff = real - plan;
+    const sep = k === 0 ? (d > 0 ? " day-sep" : "") : " period-sep";
+    return `<td class="${sep.trim()}">${plan}</td><td class="grp-real">${real}</td><td class="${diffClass(diff)}">${fmtDiff(diff)}</td>`;
+  }).join("")).join("");
+
+  const dayHead = DAY_NAMES_FULL.map((d, i) => `<th class="day${i > 0 ? " day-sep" : ""}" colspan="6">${d}</th>`).join("");
+  const periodHead = DAYS.map((_, i) => `<th colspan="3"${i > 0 ? ' class="day-sep"' : ""}>AM</th><th colspan="3" class="period-sep">PM</th>`).join("");
+  const labelHead = DAYS.map((_, i) =>
+    `<th${i > 0 ? ' class="day-sep"' : ""}>Plan</th><th class="grp-real">Real</th><th>Dif.</th>` +
+    `<th class="period-sep">Plan</th><th class="grp-real">Real</th><th>Dif.</th>`
+  ).join("");
+
+  return `
+  <section class="card">
+    <div class="card-head"><h3>Asistencia: Planificación vs Real</h3><p>Lunes a domingo · Planificación, Real y Diferencia lado a lado, por turno AM / PM</p></div>
+    <div class="scroll"><table class="ampm att-compare">
+      <thead>
+        <tr>
+          <th class="store" rowspan="3">TIENDA</th>
+          ${dayHead}
+        </tr>
+        <tr>${periodHead}</tr>
+        <tr>${labelHead}</tr>
+      </thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><th class="store">TOTAL GENERAL</th>${footCells}</tr></tfoot>
+    </table></div>
+    <p class="note"><span class="srkey"></span>Con Picker Senior. AM: antes de las 14:00 · PM: 14:00 o después. "Real" cuenta la <em>Hora de Ingreso</em> registrada. "Dif." = Real − Planificación (negativo = faltaron personas, positivo = llegaron más de las planificadas).</p>
+  </section>`;
+}
+
+/* ---------- Render ---------- */
+function setWeek(w){
+  week = w;
+  rows = ALL.filter(r => r.week === week && r.store);
+  realRows = REAL_ALL.filter(r => r.week === week && r.store && r.date);
+  stores = [...new Set(rows.map(r => r.store))];
+  chains = [...new Set(stores.map(chainOf))];
+  if (!stores.includes(current)) current = stores[0] || "";
+  $("weekTag").textContent = week ? "S" + week : "";
+  $("kpis").innerHTML = `
+    <div class="kpi"><b>${stores.length}</b><span>tiendas</span></div>
+    <div class="kpi"><b>${rows.filter(r => r.name).length}</b><span>zubaleros</span></div>
+    <div class="kpi"><b>${chains.length}</b><span>cadenas</span></div>`;
+  nav.innerHTML = chains.map(c => `
+    <div class="chain"><h2>${esc(c)}</h2>
+      ${stores.filter(s => chainOf(s) === c).map(s => `<button class="store" type="button" data-s="${esc(s)}">${esc(s.replace(c + " ", ""))}</button>`).join("")}
+    </div>`).join("");
+  render();
+}
+
+function render(){
+  if (!rows.length){
+    out.innerHTML = `<section class="card"><p class="peak">No hay registros de planificación para esta semana.</p></section>`;
+    return;
+  }
+  const fn = view === "resumen" ? summary : card;
+  out.innerHTML = view === "ampm" ? (ampm() + attendance()) : (all ? stores.map(fn).join("") : fn(current));
+  nav.style.display = view === "ampm" ? "none" : "";
+  tg.style.display = view === "ampm" ? "none" : "";
+  legend.style.visibility = view === "detalle" ? "visible" : "hidden";
+  nav.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(!all && b.dataset.s === current)));
+  document.querySelectorAll(".views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === view)));
+  tg.textContent = all ? "Ver una tienda" : "Ver todas las tiendas";
+  foot.textContent = view === "ampm" ? "Vista consolidada de todas las tiendas."
+    : view === "resumen" ? "Cada celda indica cuántas personas trabajan en esa hora. Pasa el cursor sobre una celda para ver los nombres."
+    : "Barra azul a la izquierda del nombre: Picker Senior.";
+}
+
+nav.addEventListener("click", e => { const b = e.target.closest("button.store"); if (!b) return; current = b.dataset.s; all = false; render(); });
+tg.addEventListener("click", () => { all = !all; render(); });
+document.querySelector(".views").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (!b) return; view = b.dataset.v; render(); });
+$("weekSel").addEventListener("change", e => setWeek(e.target.value));
+
+/* ---------- Carga de datos ---------- */
+async function load(){
+  const res = await fetch(API_URL, { cache: "no-store" });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || `Error ${res.status}`);
+  return body;
+}
+
+function applyData(body){
+  const allRecords = body.records || [];
+  const planRecords = allRecords.filter(r => !r || !r._source || r._source === "plan");
+  const realRecords = allRecords.filter(r => r && r._source === "real");
+  ALL = planRecords.map(toRow);
+  REAL_ALL = realRecords.map(toAttendanceRow);
+  const weeks = [...new Set(ALL.map(r => r.week).filter(Boolean))].sort((a,b) => Number(b) - Number(a) || b.localeCompare(a));
+  const sel = $("weekSel");
+  sel.innerHTML = weeks.map(w => `<option value="${esc(w)}">Semana ${esc(w)}</option>`).join("");
+  sel.style.display = weeks.length > 1 ? "" : "none";
+  const keep = weeks.includes(week) ? week : (weeks[0] || "");
+  sel.value = keep;
+  const when = body.fetchedAt ? new Date(body.fetchedAt).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" }) : "";
+  $("sub").textContent = `Zubale Perú · Turnos de lunes a domingo por zubalero${when ? " · Actualizado " + when : ""}`;
+  setWeek(keep);
+}
+
+async function refresh(){
+  const b = $("refresh"); b.disabled = true; b.textContent = "Actualizando…";
+  if (!ALL.length) out.innerHTML = `<section class="card"><p class="peak">Cargando planificación…</p></section>`;
+  try { applyData(await load()); }
+  catch(e) { out.innerHTML = `<section class="card"><p class="peak">No se pudo cargar la planificación: ${esc(e.message)}</p></section>`; }
+  b.disabled = false; b.textContent = "Actualizar";
+}
+
+$("refresh").addEventListener("click", refresh);
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cencosud · Panel Operativo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --blue:#0043FC;
+    --light-blue:#0070FF;
+    --dark-blue:#02015D;
+    --white:#FFFFFF;
+    --mid-gray:#c7c8ca;
+    --dark-gray:#211f20;
+    --warning:#ec3223;
+    --confirm:#62b275;
+    --attention:#c02c84;
+    --purple:#d900ff;
+    --mid-purple:#df6ee4;
+
+    --bg-0:#f5f7fc;
+    --bg-1:#eef1fb;
+    --panel:#ffffff;
+    --panel-2:#ffffff;
+    --line:#e3e7f5;
+    --text-dim:#6b6f9a;
+    --text-mid:#3a3d6b;
+    --text-strong:#02015D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(0,112,255,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(0,67,252,0.06), transparent 55%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 60%, var(--bg-0));
+    background-attachment:fixed;
+    color:var(--text-strong);
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    min-height:100vh;
+    padding:28px clamp(16px,4vw,48px) 60px;
+  }
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-bottom:26px;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(135deg, var(--blue), var(--light-blue));
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:18px;color:var(--white);
+    box-shadow:0 8px 20px rgba(0,67,252,0.28);
+    flex-shrink:0;
+  }
+  .brand h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.2px;color:var(--text-strong);}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:var(--text-dim);}
+
+  .filters{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);}
+
+  .filter-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 22px 20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 14px rgba(2,1,93,0.05);
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .filter-block{display:flex;flex-direction:column;gap:10px;}
+  .filter-label{
+    display:flex;align-items:center;gap:7px;
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--text-dim);font-weight:700;
+  }
+  .filter-label svg{color:var(--text-dim);flex-shrink:0;}
+  .filter-row{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-end;}
+
+  .store-pills{display:flex;gap:9px;flex-wrap:wrap;}
+  .store-pill{
+    border:1px solid var(--line);
+    background:#eef1fd;
+    color:var(--text-strong);
+    font-weight:700;
+    font-size:13.5px;
+    padding:9px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .store-pill:hover{border-color:var(--light-blue);}
+  .store-pill.active{
+    background:linear-gradient(135deg,var(--blue),var(--light-blue));
+    color:var(--white);
+    border-color:transparent;
+    box-shadow:0 4px 14px rgba(0,67,252,0.3);
+  }
+  .store-pill.inactive{
+    background:#f5f6fb;
+    color:var(--text-dim);
+    opacity:.6;
+  }
+
+  .range-row{display:flex;align-items:center;gap:10px;}
+  .range-sep{color:var(--text-dim);font-size:13px;font-weight:600;}
+  .range-row select{min-width:170px;}
+
+  input[type="text"]{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text-strong);
+    padding:9px 12px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:500;
+    box-shadow:0 1px 3px rgba(2,1,93,0.06);
+    min-width:0;
+  }
+  input[type="text"]:focus{outline:none;border-color:var(--light-blue);}
+  input[type="text"]::placeholder{color:var(--text-dim);}
+
+  .action-btn{
+    border:none;
+    background:linear-gradient(135deg,var(--blue),var(--light-blue));
+    color:var(--white);
+    font-weight:700;
+    font-size:13.5px;
+    padding:9px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    white-space:nowrap;
+    box-shadow:0 4px 14px rgba(0,67,252,0.28);
+    transition:filter .15s ease;
+  }
+  .action-btn:hover{filter:brightness(1.08);}
+  .action-btn:disabled{opacity:.6;cursor:default;filter:none;}
+  .action-btn.ghost{
+    background:var(--panel);
+    color:var(--text-mid);
+    border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(2,1,93,0.06);
+    padding:9px 12px;
+  }
+  .action-btn.ghost:hover{border-color:var(--light-blue);color:var(--blue);}
+
+  .auto-refresh-toggle{
+    display:flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:600;color:var(--text-mid);
+    cursor:pointer;padding:9px 4px;
+  }
+
+  .conn-error{
+    display:none;
+    background:rgba(236,50,35,0.08);
+    border:1px solid rgba(236,50,35,0.25);
+    color:#b3271a;
+    font-size:12.5px;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:10px;
+    margin-top:14px;
+  }
+  .conn-error.show{display:block;}
+
+  .dot.pulsing{animation:pulse 1.1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  select{
+    appearance:none;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text-strong);
+    padding:9px 34px 9px 12px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:600;
+    min-width:150px;
+    cursor:pointer;
+    box-shadow:0 1px 3px rgba(2,1,93,0.06);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0 L5 6 L10 0 Z' fill='%236b6f9a'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+  }
+  select:hover{border-color:var(--light-blue);}
+
+  .view-toggle{
+    display:flex; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:3px; gap:2px;
+    box-shadow:0 1px 3px rgba(2,1,93,0.06);
+  }
+  .view-toggle button{
+    border:none; background:transparent; color:var(--text-dim);
+    padding:7px 14px; font-size:13px; font-weight:700; border-radius:8px;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .view-toggle button.active{
+    background:linear-gradient(135deg,var(--blue),var(--light-blue));
+    color:var(--white);
+    box-shadow:0 4px 14px rgba(0,67,252,0.35);
+  }
+  .view-toggle button:not(.active):hover{color:var(--text-strong);}
+
+  .status-pill{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;font-size:11.5px;color:var(--text-dim);
+    box-shadow:0 1px 3px rgba(2,1,93,0.06);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--confirm);box-shadow:0 0 8px rgba(98,178,117,0.6);}
+
+  #connectionCard .range-row{width:100%;}
+  #connectionCard input[type="text"]{flex:1;}
+
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .kpi{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(2,1,93,0.05);
+  }
+  .kpi::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--accent, var(--blue));
+  }
+  .kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);margin-bottom:8px;font-weight:700;}
+  .kpi .value{font-size:28px;font-weight:800;line-height:1;color:var(--text-strong);}
+  .kpi .delta{font-size:12px;margin-top:8px;font-weight:700;}
+  .delta.up{color:#2fae3f;}
+  .delta.down{color:var(--warning);}
+  .delta.flat{color:var(--text-dim);}
+
+  .grid-2{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 20px 10px;
+    box-shadow:0 2px 14px rgba(2,1,93,0.05);
+  }
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+  }
+  .panel-head h3{margin:0;font-size:14.5px;font-weight:700;color:var(--text-strong);}
+  .panel-head span{font-size:11px;color:var(--text-dim);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--text-mid);}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+
+  canvas{max-height:280px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--text-dim);padding:10px 12px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--panel);
+  }
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--text-mid);}
+  tbody tr:hover{background:#f5f7fc;}
+  tbody td.strong{color:var(--text-strong);font-weight:700;}
+  .table-wrap{max-height:420px;overflow:auto;}
+
+  .badge{
+    display:inline-block;padding:3px 9px;border-radius:999px;font-weight:700;font-size:12px;
+  }
+  .badge.good{background:rgba(98,178,117,0.16);color:#2c9a3a;}
+  .badge.warn{background:rgba(169,45,191,0.16);color:#8329a5;}
+  .badge.bad{background:rgba(236,50,35,0.14);color:var(--warning);}
+  .badge.flat{background:rgba(107,111,154,0.12);color:var(--text-dim);}
+
+  .hm-good{ background:rgba(98,178,117,.16); }
+  .hm-warn{ background:rgba(169,45,191,.18); }
+  .hm-bad{ background:rgba(236,50,35,.16); }
+  .hm-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .hm-legend{display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-dim);flex-wrap:wrap;margin-bottom:12px;}
+  .hm-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+  tbody td svg{display:block;}
+
+  .footer-note{
+    text-align:center;color:var(--text-dim);font-size:11.5px;margin-top:26px;opacity:.8;
+  }
+
+  @media (max-width:1100px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div>
+      <h1>Panel Operativo · Tiendas Cencosud</h1>
+      <p>Tendencia de indicadores de despacho y disponibilidad</p>
+    </div>
+  </div>
+  <span class="status-pill"><span class="dot"></span><span id="rangeLabel">—</span></span>
+</header>
+
+<section class="filter-card" id="connectionCard" style="display:none;">
+  <div class="filter-row" style="align-items:flex-end;">
+    <div class="filter-block" style="flex:1 1 320px;min-width:260px;">
+      <div class="filter-label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Fuente de datos · webhook del proyecto · _source: opkpiscencosud</div>
+      <div class="range-row" style="gap:8px;">
+        <button type="button" id="btnRefresh" class="action-btn ghost" title="Actualizar ahora">⟳ Actualizar</button>
+      </div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-label">Estado</div>
+      <span class="status-pill" id="connStatusPill"><span class="dot" id="connDot" style="background:var(--mid-gray);box-shadow:none;"></span><span id="connStatusText">Conectando…</span></span>
+    </div>
+    <div class="filter-block">
+      <label class="auto-refresh-toggle">
+        <input type="checkbox" id="autoRefresh"> Auto-actualizar cada 5 min
+      </label>
+    </div>
+  </div>
+  <div id="connError" class="conn-error"></div>
+</section>
+
+<section class="filter-card">
+  <div class="filter-block">
+    <div class="filter-label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M4 10v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V10"/></svg>Tiendas</div>
+    <div class="store-pills" id="storePills"></div>
+  </div>
+
+  <div class="filter-row">
+    <div class="filter-block">
+      <div class="filter-label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="rangeFilterLabel">Rango de semanas</span></div>
+      <div class="range-row">
+        <select id="rangeFrom"></select>
+        <span class="range-sep">a</span>
+        <select id="rangeTo"></select>
+      </div>
+    </div>
+
+    <div class="filter-block">
+      <div class="filter-label">Agrupar por</div>
+      <div class="view-toggle" id="viewToggle">
+        <button data-view="daily">Diario</button>
+        <button data-view="weekly" class="active">Semanal</button>
+        <button data-view="monthly">Mensual</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="kpis" id="kpiRow"></section>
+
+<section class="grid-2">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Pedidos &amp; On time D</h3>
+      <span id="chartAPeriod">semanal</span>
+    </div>
+    <canvas id="chartOrders"></canvas>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Calidad de despacho</h3>
+      <div class="legend">
+        <span><i style="background:#0070FF"></i>On time D</span>
+        <span><i style="background:#62b275"></i>Fill Rate</span>
+        <span><i style="background:#df6ee4"></i>Found Rate</span>
+      </div>
+    </div>
+    <canvas id="chartQuality"></canvas>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>OPcasos</h3>
+      <span id="chartOpCasosPeriod">semanal</span>
+    </div>
+    <canvas id="chartOpCasos"></canvas>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>TMs</h3>
+      <span id="chartTmsPeriod">semanal</span>
+    </div>
+    <canvas id="chartTms"></canvas>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom:16px;">
+  <div class="panel-head">
+    <h3>Ranking de tiendas · último período</h3>
+    <span id="rankingPeriodLabel"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tienda</th>
+          <th>Pedidos</th>
+          <th>Var. Pedidos</th>
+          <th>On time D</th>
+          <th>On time P</th>
+          <th>Fill Rate</th>
+          <th>Found Rate</th>
+          <th>OPcasos</th>
+          <th>TMs</th>
+        </tr>
+      </thead>
+      <tbody id="rankingBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom:16px;">
+  <div class="panel-head">
+    <h3>Heatmap por tienda</h3>
+    <div class="hm-controls">
+      <select id="hmMetric"></select>
+    </div>
+  </div>
+  <div class="hm-legend">
+    <span><i class="hm-good"></i> ≤5pp vs promedio</span>
+    <span><i class="hm-warn"></i> 5–15pp</span>
+    <span><i class="hm-bad"></i> &gt;15pp</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="hmHeadRow"><th>Tienda</th></tr></thead>
+      <tbody id="hmBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom:16px;">
+  <div class="panel-head">
+    <h3>Trends</h3>
+    <span>por métrica · ponderado por pedidos</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="trendsHeadRow"><th>Métrica</th></tr></thead>
+      <tbody id="trendsBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h3>Log</h3>
+    <span>más reciente primero · ponderado por pedidos</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th>Pedidos</th>
+          <th>On time D</th>
+          <th>On time P</th>
+          <th>Fill Rate</th>
+          <th>Found Rate</th>
+          <th>OPcasos</th>
+          <th>TMs</th>
+        </tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<p class="footer-note">Datos operativos internos · uso confidencial</p>
+
+<script>
+// ---------- webhook config ----------
+// El webhook debe responder con las filas cuyo campo _source sea "opkpiscencosud",
+// usando exactamente las mismas columnas que el CSV original:
+// Fecha (d/m/aaaa), Tienda, "On time D", "Pedidos totales", "On time P", "Fill Rate", "Found Rate",
+// "OPcasos", "TMs"
+const SOURCE_TAG = 'opkpiscencosud';
+// Mismo webhook de datos que usa el resto del proyecto (servidor propio -> n8n/Google Sheets).
+// Al vivir esta pestaña dentro de un iframe srcdoc sin sandbox, hereda el origen y la URL base
+// del documento contenedor, así que esta ruta relativa apunta al mismo backend.
+const WEBHOOK_URL = '/api/dashboard-data';
+
+let RAW = [];
+let STORE_NAMES = [];
+let lastFetchAt = null;
+let autoRefreshTimer = null;
+
+const COLORS = {
+  blue:'#0043FC', lightBlue:'#0070FF', darkBlue:'#02015D',
+  confirm:'#62b275', warning:'#ec3223', attention:'#c02c84',
+  midPurple:'#df6ee4', midGray:'#c7c8ca', strongPink:'#c02c84'
+};
+
+let state = { view:'weekly', stores:new Set(), rangeFrom:null, rangeTo:null, hmMetric:'onTimeD' };
+
+const OPS_METRICS = [
+  { key:'orders',    label:'Pedidos',    unit:'count', higherBetter:true },
+  { key:'onTimeD',   label:'On time D',  unit:'pct',   higherBetter:true },
+  { key:'onTimeP',   label:'On time P',  unit:'pct',   higherBetter:true },
+  { key:'fillRate',  label:'Fill Rate',  unit:'pct',   higherBetter:true },
+  { key:'foundRate', label:'Found Rate', unit:'pct',   higherBetter:true },
+  { key:'opCasos',   label:'OPcasos',    unit:'money', higherBetter:false },
+  { key:'tms',       label:'TMs',        unit:'count', higherBetter:false },
+];
+
+function fmtMetricValue(v, unit){
+  if(v===null || v===undefined || !Number.isFinite(v)) return '—';
+  if(unit==='money') return v.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return unit==='count' ? num(Math.round(v)) : pct(v);
+}
+
+// Genera un sparkline SVG simple para la columna "Tendencia".
+function sparkline(values, color){
+  const w = 100, h = 32, pad = 3;
+  const nonNull = values.filter(v=>v!=null && Number.isFinite(v));
+  if(nonNull.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  const min = Math.min(...nonNull), max = Math.max(...nonNull);
+  const range = (max-min) || 1;
+  const n = values.length;
+  const stepX = (w - pad*2) / (n-1);
+  let points = [];
+  values.forEach((v,i)=>{
+    if(v==null || !Number.isFinite(v)) return;
+    const x = pad + i*stepX;
+    const y = h - pad - ((v-min)/range)*(h-pad*2);
+    points.push([x,y]);
+  });
+  const path = points.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const last = points[points.length-1];
+  return `<svg width="${w}" height="${h}">
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.6" fill="${color}"/>
+  </svg>`;
+}
+
+// Color del sparkline: verde si la metrica mejoro entre el primer y ultimo valor
+// disponible del rango, rojo si empeoro (segun si la metrica es "mas alto mejor").
+function trendColorFor(metric, values){
+  const vals = values.filter(v=>v!=null && Number.isFinite(v));
+  if(vals.length < 2) return '#949599';
+  const delta = vals[vals.length-1] - vals[0];
+  const good = metric.higherBetter ? delta>0 : delta<0;
+  return good ? '#62b275' : '#ec3223';
+}
+
+// Badge de "Vs Ant." (delta contra el periodo anterior), reutilizando las mismas
+// clases .badge.good/.bad/.flat que ya existen para el resto de la UI.
+function vsAntBadge(metric, last, prev){
+  if(last==null || prev==null) return '<span class="badge flat">—</span>';
+  const delta = last - prev;
+  const flatThresh = metric.unit==='pct' ? 0.3 : Math.max(1, Math.abs(prev)*0.01);
+  const bad = metric.higherBetter ? delta<0 : delta>0;
+  const cls = Math.abs(delta) < flatThresh ? 'flat' : (bad ? 'bad' : 'good');
+  const arrow = delta>0.0001 ? '▲' : delta<-0.0001 ? '▼' : '•';
+  const deltaTxt = metric.unit==='pct'
+    ? (delta>=0?'+':'')+delta.toFixed(1)+'pp'
+    : metric.unit==='money'
+      ? (delta>=0?'+':'')+delta.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2})
+      : (delta>=0?'+':'')+num(Math.round(delta));
+  return `<span class="badge ${cls}">${arrow} ${deltaTxt}</span>`;
+}
+
+// ---------- helpers ----------
+function pct(n){ return (Math.round(n*10)/10).toFixed(1)+'%'; }
+function num(n){ return n.toLocaleString('es-PE'); }
+function shortCode(storeName){ return storeName.split(' - ')[0]; }
+
+// Dynamic, "nice" axis bounds so trend lines aren't flattened by a fixed 0-100 scale.
+function niceRangePct(valuesArrays){
+  const vals = [].concat(...valuesArrays).filter(v=>Number.isFinite(v));
+  if(!vals.length) return {min:0, max:100};
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if(min===max){ min-=2; max+=2; }
+  const span = max-min;
+  const pad = Math.max(span*0.18, 1.5);
+  let lo = Math.floor(Math.max(0, min-pad));
+  let hi = Math.ceil(Math.min(100, max+pad));
+  if(hi-lo < 6){ const mid=(hi+lo)/2; lo=Math.max(0,Math.floor(mid-6)); hi=Math.min(100,Math.ceil(mid+6)); }
+  return {min:lo, max:hi};
+}
+function niceRangeCount(values){
+  const vals = values.filter(v=>Number.isFinite(v));
+  if(!vals.length) return {min:0, max:10};
+  const max = Math.max(...vals);
+  if(max<=0) return {min:0, max:10};
+  const pad = Math.max(max*0.15, 1);
+  const hi = Math.ceil(max+pad);
+  return {min:0, max:hi};
+}
+
+function isoWeekInfo(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = (d.getDay()+6)%7; // Mon=0
+  const monday = new Date(d); monday.setDate(d.getDate()-day);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  // ISO week number
+  const target = new Date(monday.valueOf());
+  target.setDate(target.getDate()+3);
+  const firstThursday = new Date(target.getFullYear(),0,4);
+  const week = 1 + Math.round(((target - firstThursday)/86400000 - 3 + ((firstThursday.getDay()+6)%7))/7);
+  const fmt = (dt)=> dt.toLocaleDateString('es-PE',{day:'2-digit',month:'short'});
+  return {
+    key: monday.toISOString().slice(0,10),
+    label: `Sem ${week} · ${fmt(monday)} – ${fmt(sunday)}`,
+    sortKey: monday.toISOString().slice(0,10)
+  };
+}
+function monthInfo(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  const label = d.toLocaleDateString('es-PE',{month:'long',year:'numeric'});
+  return { key, label: label.charAt(0).toUpperCase()+label.slice(1), sortKey:key };
+}
+function dayInfo(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const label = d.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+  return { key: dateStr, label, sortKey: dateStr };
+}
+
+function periodInfo(dateStr, view){
+  if(view==='weekly') return isoWeekInfo(dateStr);
+  if(view==='monthly') return monthInfo(dateStr);
+  return dayInfo(dateStr);
+}
+
+function statusClass(v){
+  if(v>=95) return 'good';
+  if(v>=90) return 'warn';
+  return 'bad';
+}
+
+// ---------- webhook: fetch & parse ----------
+function parsePctField(v){
+  if(v===null || v===undefined) return 0;
+  if(typeof v==='number') return v<=1 ? v*100 : v; // acepta 0-1 o 0-100
+  const n = parseFloat(String(v).replace('%','').replace(',','.').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+function parseIntField(v){
+  if(v===null || v===undefined) return 0;
+  if(typeof v==='number') return Math.round(v);
+  const n = parseInt(String(v).replace(/[^\d-]/g,''), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+function parseFloatField(v){
+  if(v===null || v===undefined) return 0;
+  if(typeof v==='number') return v;
+  const n = parseFloat(String(v).replace(/,/g,'').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+function parseFechaToISO(v){
+  // Espera d/m/aaaa (igual que el CSV origen). También acepta aaaa-mm-dd por si el webhook ya lo envía normalizado.
+  if(!v) return null;
+  const s = String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    const [_, d, mo, y] = m;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  const d2 = new Date(s);
+  return isNaN(d2) ? null : d2.toISOString().slice(0,10);
+}
+
+function extractRowsArray(payload){
+  if(Array.isArray(payload)) return payload;
+  if(!payload || typeof payload!=='object') return [];
+  for(const key of ['data','rows','results','items','hits','records']){
+    if(Array.isArray(payload[key])) return payload[key];
+  }
+  // formato tipo Elasticsearch: { hits: { hits: [...] } }
+  if(payload.hits && Array.isArray(payload.hits.hits)) return payload.hits.hits;
+  return [];
+}
+
+function normalizeRow(item){
+  // soporta filas planas o envueltas en _source (estilo Elasticsearch hit)
+  const flat = (item && typeof item._source==='object') ? item._source : item;
+  const iso = parseFechaToISO(flat['Fecha']);
+  if(!iso || !flat['Tienda']) return null;
+  return {
+    date: iso,
+    store: String(flat['Tienda']).trim(),
+    onTimeD: parsePctField(flat['On time D']),
+    orders: parseIntField(flat['Pedidos totales']),
+    onTimeP: parsePctField(flat['On time P']),
+    fillRate: parsePctField(flat['Fill Rate']),
+    foundRate: parsePctField(flat['Found Rate']),
+    opCasos: parseFloatField(flat['OPcasos']),
+    tms: parseIntField(flat['TMs']),
+  };
+}
+
+function filterBySource(rows){
+  const tagged = rows.filter(r=>{
+    const src = (r && typeof r._source==='string') ? r._source : (r && r._source && r._source._source);
+    return src === SOURCE_TAG;
+  });
+  // si ninguna fila trae el tag (p.ej. el webhook ya filtró por _source antes de responder), usamos todas
+  return tagged.length ? tagged : rows;
+}
+
+function setConnStatus(mode, text){
+  const dot = document.getElementById('connDot');
+  const label = document.getElementById('connStatusText');
+  label.textContent = text;
+  dot.classList.remove('pulsing');
+  if(mode==='loading'){ dot.style.background = COLORS.attention; dot.style.boxShadow='0 0 8px rgba(192,44,132,0.7)'; dot.classList.add('pulsing'); }
+  else if(mode==='ok'){ dot.style.background = COLORS.confirm; dot.style.boxShadow='0 0 8px rgba(98,178,117,0.6)'; }
+  else if(mode==='error'){ dot.style.background = COLORS.warning; dot.style.boxShadow='0 0 8px rgba(236,50,35,0.5)'; }
+  else { dot.style.background = 'var(--mid-gray)'; dot.style.boxShadow='none'; }
+}
+function showConnError(msg){
+  const el = document.getElementById('connError');
+  if(!msg){ el.classList.remove('show'); el.textContent=''; return; }
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function fetchData(){
+  const btnRefresh = document.getElementById('btnRefresh');
+  btnRefresh.disabled = true;
+  setConnStatus('loading', 'Conectando…');
+  showConnError(null);
+
+  try{
+    const res = await fetch(WEBHOOK_URL, { method:'GET', headers:{ 'Accept':'application/json' }, cache:'no-store' });
+    if(!res.ok) throw new Error(`El webhook respondió ${res.status} ${res.statusText}`);
+    const payload = await res.json();
+    const rawRows = filterBySource(extractRowsArray(payload));
+    const parsed = rawRows.map(normalizeRow).filter(Boolean);
+    if(!parsed.length) throw new Error(`Aún no hay filas con _source = "${SOURCE_TAG}" en el webhook.`);
+
+    RAW = parsed;
+    STORE_NAMES = [...new Set(RAW.map(r=>r.store))].sort();
+    // conserva tiendas seleccionadas que sigan existiendo; si no queda ninguna, selecciona todas
+    const keep = [...state.stores].filter(s=>STORE_NAMES.includes(s));
+    state.stores = new Set(keep.length ? keep : STORE_NAMES);
+
+    lastFetchAt = new Date();
+    setConnStatus('ok', `Conectado · ${num(RAW.length)} filas · ${lastFetchAt.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`);
+
+    buildStorePills();
+    buildRangeSelectors(true);
+    render();
+  }catch(err){
+    setConnStatus('error', 'Error de conexión');
+    showConnError(err.message || 'No se pudo leer el webhook.');
+  }finally{
+    btnRefresh.disabled = false;
+  }
+}
+
+function setAutoRefresh(on){
+  if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer=null; }
+  if(on) autoRefreshTimer = setInterval(fetchData, 5*60*1000);
+}
+
+// ---------- filters: stores ----------
+function buildStorePills(){
+  const wrap = document.getElementById('storePills');
+  if(!STORE_NAMES.length){
+    wrap.innerHTML = `<span style="color:var(--text-dim);font-size:13px;">Conecta el webhook para ver las tiendas disponibles.</span>`;
+    return;
+  }
+  wrap.innerHTML = STORE_NAMES.map(s=>{
+    const active = state.stores.has(s);
+    return `<button type="button" class="store-pill ${active?'active':'inactive'}" data-store="${s}">${shortCode(s)}</button>`;
+  }).join('');
+}
+
+function toggleStore(storeName){
+  if(state.stores.has(storeName)){
+    if(state.stores.size===1) return; // keep at least one selected
+    state.stores.delete(storeName);
+  } else {
+    state.stores.add(storeName);
+  }
+  buildStorePills();
+  render();
+}
+
+function filteredRows(){
+  return RAW.filter(r=>state.stores.has(r.store));
+}
+
+// ---------- filters: period range ----------
+const RANGE_LABELS = { daily:'Rango de días', weekly:'Rango de semanas', monthly:'Rango de meses' };
+
+function allPeriodsForView(view){
+  const map = new Map();
+  RAW.forEach(r=>{
+    const info = periodInfo(r.date, view);
+    if(!map.has(info.key)) map.set(info.key, info);
+  });
+  return [...map.values()].sort((a,b)=> a.sortKey<b.sortKey?-1:a.sortKey>b.sortKey?1:0);
+}
+
+function buildRangeSelectors(resetSelection){
+  const periods = allPeriodsForView(state.view);
+  document.getElementById('rangeFilterLabel').textContent = RANGE_LABELS[state.view];
+
+  const fromSel = document.getElementById('rangeFrom');
+  const toSel = document.getElementById('rangeTo');
+
+  if(!periods.length){
+    fromSel.innerHTML = '<option value="">—</option>';
+    toSel.innerHTML = '<option value="">—</option>';
+    state.rangeFrom = null; state.rangeTo = null;
+    return;
+  }
+
+  const opts = periods.map(p=>`<option value="${p.key}">${p.label}</option>`).join('');
+  fromSel.innerHTML = opts;
+  toSel.innerHTML = opts;
+
+  if(resetSelection || !periods.some(p=>p.key===state.rangeFrom) || !periods.some(p=>p.key===state.rangeTo)){
+    state.rangeFrom = periods[0].key;
+    state.rangeTo = periods[periods.length-1].key;
+  }
+  fromSel.value = state.rangeFrom;
+  toSel.value = state.rangeTo;
+}
+
+function aggregateByPeriod(rows, view){
+  const map = new Map();
+  rows.forEach(r=>{
+    const info = periodInfo(r.date, view);
+    if(!map.has(info.key)){
+      map.set(info.key, { key:info.key, label:info.label, sortKey:info.sortKey,
+        orders:0, wD:0, wP:0, wF:0, wFo:0, opCasos:0, tms:0 });
+    }
+    const g = map.get(info.key);
+    g.orders += r.orders;
+    g.wD += r.onTimeD * r.orders;
+    g.wP += r.onTimeP * r.orders;
+    g.wF += r.fillRate * r.orders;
+    g.wFo += r.foundRate * r.orders;
+    g.opCasos += r.opCasos;
+    g.tms += r.tms;
+  });
+  const arr = [...map.values()].map(g=>({
+    key:g.key, label:g.label, sortKey:g.sortKey, orders:g.orders,
+    onTimeD: g.orders? g.wD/g.orders : 0,
+    onTimeP: g.orders? g.wP/g.orders : 0,
+    fillRate: g.orders? g.wF/g.orders : 0,
+    foundRate: g.orders? g.wFo/g.orders : 0,
+    opCasos: g.opCasos,
+    tms: g.tms,
+  }));
+  arr.sort((a,b)=> a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : 0);
+  return arr;
+}
+
+function aggregateStoresForLatestPeriod(view){
+  const info = view==='daily' ? dayInfo : view==='weekly' ? isoWeekInfo : monthInfo;
+  const rowsAll = filteredRows().filter(r=> info(r.date).key >= state.rangeFrom && info(r.date).key <= state.rangeTo);
+  if(rowsAll.length===0) return {label:'', rows:[]};
+
+  // Determina el período más reciente y el anterior dentro del rango seleccionado,
+  // para poder calcular la variación de pedidos vs el período previo.
+  const keysMap = new Map();
+  rowsAll.forEach(r=>{ const i=info(r.date); if(!keysMap.has(i.key)) keysMap.set(i.key, i); });
+  const sortedKeys = [...keysMap.values()].sort((a,b)=> a.sortKey<b.sortKey?-1:a.sortKey>b.sortKey?1:0);
+  const latest = sortedKeys[sortedKeys.length-1];
+  const prev = sortedKeys.length>1 ? sortedKeys[sortedKeys.length-2] : null;
+  const latestKey = latest.key;
+  const prevKey = prev ? prev.key : null;
+
+  const stores = [...state.stores].sort();
+  const label = latest.label;
+  const rows = stores.map(store=>{
+    const rs = rowsAll.filter(r=> r.store===store && info(r.date).key===latestKey);
+    const orders = rs.reduce((a,r)=>a+r.orders,0);
+    const wD = rs.reduce((a,r)=>a+r.onTimeD*r.orders,0);
+    const wP = rs.reduce((a,r)=>a+r.onTimeP*r.orders,0);
+    const wF = rs.reduce((a,r)=>a+r.fillRate*r.orders,0);
+    const wFo = rs.reduce((a,r)=>a+r.foundRate*r.orders,0);
+    const opCasos = rs.reduce((a,r)=>a+r.opCasos,0);
+    const tms = rs.reduce((a,r)=>a+r.tms,0);
+
+    let prevOrders = null;
+    if(prevKey){
+      const prs = rowsAll.filter(r=> r.store===store && info(r.date).key===prevKey);
+      prevOrders = prs.reduce((a,r)=>a+r.orders,0);
+    }
+
+    return { store, orders, prevOrders,
+      onTimeD: orders? wD/orders:0, onTimeP: orders? wP/orders:0,
+      fillRate: orders? wF/orders:0, foundRate: orders? wFo/orders:0,
+      opCasos, tms };
+  }).filter(r=>r.orders>0).sort((a,b)=> b.orders-a.orders);
+  return { label, rows };
+}
+
+// ---------- heatmap: valores por tienda x periodo ----------
+function buildHeatmapData(){
+  const rows = filteredRows();
+  const periodMap = new Map();
+  rows.forEach(r=>{
+    const info = periodInfo(r.date, state.view);
+    if(state.rangeFrom && info.key < state.rangeFrom) return;
+    if(state.rangeTo && info.key > state.rangeTo) return;
+    if(!periodMap.has(info.key)) periodMap.set(info.key, info);
+  });
+  const periods = [...periodMap.values()].sort((a,b)=> a.sortKey<b.sortKey?-1:a.sortKey>b.sortKey?1:0);
+
+  const perStorePeriod = new Map();
+  rows.forEach(r=>{
+    const info = periodInfo(r.date, state.view);
+    if(state.rangeFrom && info.key < state.rangeFrom) return;
+    if(state.rangeTo && info.key > state.rangeTo) return;
+    if(!perStorePeriod.has(r.store)) perStorePeriod.set(r.store, new Map());
+    const m = perStorePeriod.get(r.store);
+    if(!m.has(info.key)) m.set(info.key, {orders:0,wD:0,wP:0,wF:0,wFo:0,opCasos:0,tms:0});
+    const g = m.get(info.key);
+    g.orders += r.orders;
+    g.wD += r.onTimeD*r.orders;
+    g.wP += r.onTimeP*r.orders;
+    g.wF += r.fillRate*r.orders;
+    g.wFo += r.foundRate*r.orders;
+    g.opCasos += r.opCasos;
+    g.tms += r.tms;
+  });
+
+  function metricValue(g){
+    if(!g) return null;
+    if(state.hmMetric==='opCasos') return g.opCasos;
+    if(state.hmMetric==='tms') return g.tms;
+    if(g.orders===0) return null;
+    if(state.hmMetric==='orders') return g.orders;
+    if(state.hmMetric==='onTimeD') return g.wD/g.orders;
+    if(state.hmMetric==='onTimeP') return g.wP/g.orders;
+    if(state.hmMetric==='fillRate') return g.wF/g.orders;
+    if(state.hmMetric==='foundRate') return g.wFo/g.orders;
+    return null;
+  }
+
+  const storesList = [...state.stores].sort();
+  const periodAvgAcc = periods.map(()=>({sum:0,count:0}));
+  const storeSeries = new Map();
+
+  storesList.forEach(store=>{
+    const m = perStorePeriod.get(store) || new Map();
+    const vals = periods.map((p,idx)=>{
+      const v = metricValue(m.get(p.key));
+      if(v!==null){ periodAvgAcc[idx].sum += v; periodAvgAcc[idx].count += 1; }
+      return v;
+    });
+    storeSeries.set(store, vals);
+  });
+
+  const periodAvg = periodAvgAcc.map(a=> a.count ? a.sum/a.count : null);
+  return { periods, storeSeries, periodAvg };
+}
+
+// Clasifica una celda del heatmap segun que tan lejos esta del promedio de esa
+// columna (mismo criterio visual que "vs promedio cadena": <=5pp verde, 5-15pp
+// amarillo, >15pp rojo; para "Pedidos" -que es un conteo, no un %- se usa la
+// diferencia relativa en vez de puntos porcentuales).
+function hmDeviationClass(value, avg, unit){
+  if(value==null || avg==null) return '';
+  let diff;
+  if(unit==='count' || unit==='money'){ diff = avg ? Math.abs(value-avg)/avg*100 : 0; }
+  else { diff = Math.abs(value-avg); }
+  if(diff<=5) return 'hm-good';
+  if(diff<=15) return 'hm-warn';
+  return 'hm-bad';
+}
+
+function shortPeriodLabel(label){
+  return label.replace(/^Sem \d+ · /,'');
+}
+
+function renderHeatmap(){
+  const metric = OPS_METRICS.find(m=>m.key===state.hmMetric) || OPS_METRICS[0];
+  const { periods, storeSeries, periodAvg } = buildHeatmapData();
+
+  const headRow = document.getElementById('hmHeadRow');
+  headRow.innerHTML = '<th>Tienda</th>'
+    + periods.map(p=>`<th>${shortPeriodLabel(p.label)}</th>`).join('')
+    + '<th>Vs Ant.</th><th>Tendencia</th>';
+
+  const body = document.getElementById('hmBody');
+  const storesList = [...storeSeries.keys()];
+  if(!storesList.length || !periods.length){
+    body.innerHTML = `<tr><td colspan="${periods.length+3}" style="text-align:center;color:var(--text-dim);">Sin datos en el rango seleccionado.</td></tr>`;
+    return;
+  }
+  body.innerHTML = storesList.map(store=>{
+    const vals = storeSeries.get(store);
+    const cells = vals.map((v,idx)=>{
+      const cls = hmDeviationClass(v, periodAvg[idx], metric.unit);
+      return `<td class="${cls}">${fmtMetricValue(v, metric.unit)}</td>`;
+    }).join('');
+    const nonNull = vals.filter(v=>v!=null);
+    const last = nonNull.length ? nonNull[nonNull.length-1] : null;
+    const prev = nonNull.length>1 ? nonNull[nonNull.length-2] : null;
+    const color = trendColorFor(metric, vals);
+    return `<tr><td class="strong">${store}</td>${cells}<td>${vsAntBadge(metric,last,prev)}</td><td>${sparkline(vals,color)}</td></tr>`;
+  }).join('');
+}
+
+function renderTrends(agg){
+  const headRow = document.getElementById('trendsHeadRow');
+  headRow.innerHTML = '<th>Métrica</th>'
+    + agg.map(a=>`<th>${shortPeriodLabel(a.label)}</th>`).join('')
+    + '<th>Vs Ant.</th><th>Tendencia</th>';
+
+  const body = document.getElementById('trendsBody');
+  if(!agg.length){
+    body.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">Sin datos en el rango seleccionado.</td></tr>`;
+    return;
+  }
+  body.innerHTML = OPS_METRICS.map(m=>{
+    const vals = agg.map(a=>a[m.key]);
+    const cells = vals.map(v=>`<td>${fmtMetricValue(v, m.unit)}</td>`).join('');
+    const last = vals[vals.length-1], prev = vals.length>1 ? vals[vals.length-2] : null;
+    const color = trendColorFor(m, vals);
+    return `<tr><td class="strong">${m.label}</td>${cells}<td>${vsAntBadge(m,last,prev)}</td><td>${sparkline(vals,color)}</td></tr>`;
+  }).join('');
+}
+
+function buildHmMetricSelect(){
+  const sel = document.getElementById('hmMetric');
+  sel.innerHTML = OPS_METRICS.map(m=>`<option value="${m.key}">${m.label}</option>`).join('');
+  sel.value = state.hmMetric;
+}
+
+// ---------- charts ----------
+let chartOrders, chartQuality, chartOpCasos, chartTms;
+
+function renderCharts(agg){
+  const labels = agg.map(a=>a.label);
+  const ctxA = document.getElementById('chartOrders').getContext('2d');
+  const ctxB = document.getElementById('chartQuality').getContext('2d');
+  const ctxC = document.getElementById('chartOpCasos').getContext('2d');
+  const ctxD = document.getElementById('chartTms').getContext('2d');
+
+  const gradOrders = ctxA.createLinearGradient(0,0,0,260);
+  gradOrders.addColorStop(0,'rgba(0,67,252,0.75)');
+  gradOrders.addColorStop(1,'rgba(0,112,255,0.15)');
+
+  const ordersRange = niceRangeCount(agg.map(a=>a.orders));
+  const onTimeDRange = {min:90, max:100};
+
+  if(chartOrders) chartOrders.destroy();
+  chartOrders = new Chart(ctxA, {
+    data:{
+      labels,
+      datasets:[
+        { type:'bar', label:'Pedidos', data:agg.map(a=>a.orders),
+          backgroundColor:gradOrders, borderRadius:4, yAxisID:'y', order:2, barThickness: 'flex', maxBarThickness: 26 },
+        { type:'line', label:'On time D', data:agg.map(a=>a.onTimeD),
+          borderColor:COLORS.strongPink, backgroundColor:COLORS.strongPink,
+          borderWidth:2.5, pointRadius:2, tension:.35, yAxisID:'y1', order:1 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{ labels:{ color:'#3a3d6b', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{ color:'#6b6f9a', font:{size:10}, maxRotation:0, autoSkip:true }, grid:{ color:'rgba(2,1,93,0.06)' } },
+        y:{ position:'left', min:ordersRange.min, max:ordersRange.max, ticks:{ color:'#6b6f9a', font:{size:10} }, grid:{ color:'rgba(2,1,93,0.06)' }, title:{display:true,text:'Pedidos',color:'#6b6f9a',font:{size:10}} },
+        y1:{ position:'right', min:onTimeDRange.min, max:onTimeDRange.max, ticks:{ color:'#6b6f9a', font:{size:10}, callback:v=>v+'%' }, grid:{ display:false }, title:{display:true,text:'On time D',color:'#6b6f9a',font:{size:10}} }
+      }
+    }
+  });
+
+  const qualityRange = niceRangePct([agg.map(a=>a.onTimeD), agg.map(a=>a.fillRate), agg.map(a=>a.foundRate)]);
+
+  if(chartQuality) chartQuality.destroy();
+  chartQuality = new Chart(ctxB, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'On time D', data:agg.map(a=>a.onTimeD), borderColor:COLORS.lightBlue, backgroundColor:COLORS.lightBlue, borderWidth:2.5, pointRadius:2, tension:.35 },
+        { label:'Fill Rate', data:agg.map(a=>a.fillRate), borderColor:COLORS.confirm, backgroundColor:COLORS.confirm, borderWidth:2.5, pointRadius:2, tension:.35 },
+        { label:'Found Rate', data:agg.map(a=>a.foundRate), borderColor:COLORS.midPurple, backgroundColor:COLORS.midPurple, borderWidth:2.5, pointRadius:2, tension:.35 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'#6b6f9a', font:{size:10}, maxRotation:0, autoSkip:true }, grid:{ color:'rgba(2,1,93,0.06)' } },
+        y:{ min:qualityRange.min, max:qualityRange.max, ticks:{ color:'#6b6f9a', font:{size:10}, callback:v=>v+'%' }, grid:{ color:'rgba(2,1,93,0.06)' } }
+      }
+    }
+  });
+
+  const opCasosRange = niceRangeCount(agg.map(a=>a.opCasos));
+  if(chartOpCasos) chartOpCasos.destroy();
+  chartOpCasos = new Chart(ctxC, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'OPcasos', data:agg.map(a=>a.opCasos), borderColor:COLORS.warning, backgroundColor:COLORS.warning, borderWidth:2.5, pointRadius:2, tension:.35, fill:false }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'#6b6f9a', font:{size:10}, maxRotation:0, autoSkip:true }, grid:{ color:'rgba(2,1,93,0.06)' } },
+        y:{ min:opCasosRange.min, max:opCasosRange.max, ticks:{ color:'#6b6f9a', font:{size:10} }, grid:{ color:'rgba(2,1,93,0.06)' } }
+      }
+    }
+  });
+
+  const tmsRange = niceRangeCount(agg.map(a=>a.tms));
+  if(chartTms) chartTms.destroy();
+  chartTms = new Chart(ctxD, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'TMs', data:agg.map(a=>a.tms), borderColor:COLORS.blue, backgroundColor:COLORS.blue, borderWidth:2.5, pointRadius:2, tension:.35, fill:false }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'#6b6f9a', font:{size:10}, maxRotation:0, autoSkip:true }, grid:{ color:'rgba(2,1,93,0.06)' } },
+        y:{ min:tmsRange.min, max:tmsRange.max, ticks:{ color:'#6b6f9a', font:{size:10} }, grid:{ color:'rgba(2,1,93,0.06)' } }
+      }
+    }
+  });
+}
+
+// ---------- KPIs ----------
+function renderKpis(agg){
+  const el = document.getElementById('kpiRow');
+  if(agg.length===0){ el.innerHTML=''; return; }
+  const last = agg[agg.length-1];
+  const prev = agg.length>1 ? agg[agg.length-2] : null;
+
+  const cards = [
+    { label:'Pedidos', value:num(last.orders), accent:COLORS.blue,
+      delta: prev ? last.orders-prev.orders : null, fmt:(d)=> (d>=0?'+':'')+num(d)+' vs período previo', isPct:false },
+    { label:'On time D', value:pct(last.onTimeD), accent:COLORS.attention,
+      delta: prev ? last.onTimeD-prev.onTimeD : null, isPct:true },
+    { label:'On time P', value:pct(last.onTimeP), accent:COLORS.lightBlue,
+      delta: prev ? last.onTimeP-prev.onTimeP : null, isPct:true },
+    { label:'Fill Rate', value:pct(last.fillRate), accent:COLORS.confirm,
+      delta: prev ? last.fillRate-prev.fillRate : null, isPct:true },
+    { label:'Found Rate', value:pct(last.foundRate), accent:COLORS.midPurple,
+      delta: prev ? last.foundRate-prev.foundRate : null, isPct:true },
+    { label:'OPcasos', value:fmtMetricValue(last.opCasos,'money'), accent:COLORS.warning,
+      delta: prev ? last.opCasos-prev.opCasos : null, invert:true, isPct:false,
+      fmt:(d)=> (d>=0?'+':'')+d.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2})+' vs período previo' },
+    { label:'TMs', value:num(Math.round(last.tms)), accent:COLORS.darkBlue,
+      delta: prev ? last.tms-prev.tms : null, invert:true, isPct:false,
+      fmt:(d)=> (d>=0?'+':'')+num(Math.round(d))+' vs período previo' },
+  ];
+
+  el.innerHTML = cards.map(c=>{
+    let deltaHtml = '<div class="delta flat">Sin período previo</div>';
+    if(c.delta !== null){
+      const rawCls = c.delta>0.05 ? 'up' : c.delta<-0.05 ? 'down' : 'flat';
+      const cls = c.invert ? (rawCls==='up'?'down':rawCls==='down'?'up':'flat') : rawCls;
+      const arrow = c.delta>0.05 ? '▲' : c.delta<-0.05 ? '▼' : '•';
+      const txt = c.isPct ? `${arrow} ${Math.abs(c.delta).toFixed(1)}pp vs período previo` : `${arrow} ${c.fmt(c.delta)}`;
+      deltaHtml = `<div class="delta ${cls}">${txt}</div>`;
+    }
+    return `<div class="kpi" style="--accent:${c.accent}">
+      <div class="label">${c.label}</div>
+      <div class="value">${c.value}</div>
+      ${deltaHtml}
+    </div>`;
+  }).join('');
+}
+
+// ---------- tables ----------
+function renderLog(agg){
+  const body = document.getElementById('logBody');
+  const rows = [...agg].reverse();
+  body.innerHTML = rows.map(a=>`
+    <tr>
+      <td class="strong">${a.label}</td>
+      <td>${num(a.orders)}</td>
+      <td><span class="badge ${statusClass(a.onTimeD)}">${pct(a.onTimeD)}</span></td>
+      <td><span class="badge ${statusClass(a.onTimeP)}">${pct(a.onTimeP)}</span></td>
+      <td><span class="badge ${statusClass(a.fillRate)}">${pct(a.fillRate)}</span></td>
+      <td><span class="badge ${statusClass(a.foundRate)}">${pct(a.foundRate)}</span></td>
+      <td>${fmtMetricValue(a.opCasos,'money')}</td>
+      <td>${num(Math.round(a.tms))}</td>
+    </tr>`).join('');
+}
+
+function renderRanking(){
+  const { label, rows } = aggregateStoresForLatestPeriod(state.view);
+  document.getElementById('rankingPeriodLabel').textContent = label;
+  const body = document.getElementById('rankingBody');
+  const ordersMetric = OPS_METRICS.find(m=>m.key==='orders');
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="strong">${r.store}</td>
+      <td>${num(r.orders)}</td>
+      <td>${vsAntBadge(ordersMetric, r.orders, r.prevOrders)}</td>
+      <td><span class="badge ${statusClass(r.onTimeD)}">${pct(r.onTimeD)}</span></td>
+      <td><span class="badge ${statusClass(r.onTimeP)}">${pct(r.onTimeP)}</span></td>
+      <td><span class="badge ${statusClass(r.fillRate)}">${pct(r.fillRate)}</span></td>
+      <td><span class="badge ${statusClass(r.foundRate)}">${pct(r.foundRate)}</span></td>
+      <td>${fmtMetricValue(r.opCasos,'money')}</td>
+      <td>${num(Math.round(r.tms))}</td>
+    </tr>`).join('');
+}
+
+// ---------- render orchestration ----------
+function render(){
+  const rows = filteredRows();
+  let agg = aggregateByPeriod(rows, state.view);
+  if(state.rangeFrom && state.rangeTo){
+    agg = agg.filter(a=> a.key >= state.rangeFrom && a.key <= state.rangeTo);
+  }
+  renderKpis(agg);
+  renderCharts(agg);
+  renderLog(agg);
+  renderRanking();
+  renderHeatmap();
+  renderTrends(agg);
+  document.getElementById('chartAPeriod').textContent =
+    state.view==='daily'?'diario':state.view==='weekly'?'semanal':'mensual';
+  document.getElementById('chartOpCasosPeriod').textContent =
+    state.view==='daily'?'diario':state.view==='weekly'?'semanal':'mensual';
+  document.getElementById('chartTmsPeriod').textContent =
+    state.view==='daily'?'diario':state.view==='weekly'?'semanal':'mensual';
+  if(agg.length){
+    document.getElementById('rangeLabel').textContent = `${agg[0].label}  →  ${agg[agg.length-1].label}`;
+  } else {
+    document.getElementById('rangeLabel').textContent = 'Sin datos en el rango seleccionado';
+  }
+}
+
+// ---------- events ----------
+document.getElementById('storePills').addEventListener('click', e=>{
+  const btn = e.target.closest('.store-pill');
+  if(!btn) return;
+  toggleStore(btn.dataset.store);
+});
+
+document.getElementById('rangeFrom').addEventListener('change', e=>{
+  state.rangeFrom = e.target.value;
+  if(state.rangeFrom > state.rangeTo){ state.rangeTo = state.rangeFrom; document.getElementById('rangeTo').value = state.rangeTo; }
+  render();
+});
+document.getElementById('rangeTo').addEventListener('change', e=>{
+  state.rangeTo = e.target.value;
+  if(state.rangeTo < state.rangeFrom){ state.rangeFrom = state.rangeTo; document.getElementById('rangeFrom').value = state.rangeFrom; }
+  render();
+});
+
+document.getElementById('viewToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#viewToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.view = btn.dataset.view;
+  buildRangeSelectors(true);
+  render();
+});
+
+document.getElementById('btnRefresh').addEventListener('click', fetchData);
+document.getElementById('autoRefresh').addEventListener('change', e=>{
+  setAutoRefresh(e.target.checked);
+});
+document.getElementById('hmMetric').addEventListener('change', e=>{
+  state.hmMetric = e.target.value;
+  renderHeatmap();
+});
+
+// ---------- init ----------
+buildStorePills();
+buildRangeSelectors(true);
+buildHmMetricSelect();
+render();
+fetchData();
+</script>
+</body>
+</html>

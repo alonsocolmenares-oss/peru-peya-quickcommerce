@@ -19,6 +19,7 @@ El dashboard presenta KPIs de fulfillment (órdenes, rating, order lost, replace
 ## Stack
 
 - Sitio estático (HTML/CSS/JS, sin build step) servido por un pequeño servidor Express (`server.js`), necesario únicamente para satisfacer el requisito de Cloud Buildpacks de detectar un runtime y exponer el proceso en `$PORT`.
+- `public/index.html` es el portal; cada sub-dashboard (P&L, Operations, Productividad, Hourly Ops/Times, Horarios) es un archivo propio en `public/embeds/` que se descarga al abrir su pestaña.
 - `server.js` hace de proxy hacia los webhooks de n8n (`/api/dashboard-data`, `/api/peya-hourly-data`, `/api/peya-times-data`, `/api/plan-data`) con Basic Auth. Credenciales desde Secret Manager: `N8N_WEBHOOK_USER`, `N8N_WEBHOOK_PASSWORD`.
 
 ## Desarrollo local
