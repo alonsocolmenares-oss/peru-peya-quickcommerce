@@ -468,6 +468,13 @@ function loadEmbed(name){
     .ex-client b{font-size:15px; font-weight:600;}
     .ex-client span{font-size:12px; color:var(--ex-muted);}
     .ex-client.featured{background:var(--ex-p-blue); border-color:var(--ex-p-blue);}
+    .ex-trend{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(96px,1fr); gap:12px; overflow-x:auto; padding-bottom:4px;}
+    .ex-trend-col{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--ex-muted); text-align:center;}
+    .ex-trend-col b{font-size:13px; font-weight:600; color:var(--ex-ink);}
+    .ex-trend-v{font-size:12px; font-weight:600; color:var(--ex-ink);}
+    .ex-trend-bar{height:110px; width:100%; max-width:64px; display:flex; align-items:flex-end;}
+    .ex-trend-bar div{width:100%; background:var(--ex-blue-light); border-radius:6px 6px 0 0; min-height:2px;}
+    .ex-trend-col.cur .ex-trend-bar div{background:var(--ex-blue);}
     .ex-state{padding:48px 24px; text-align:center; color:var(--ex-muted); font-size:15px; background:var(--ex-surface); border:1px solid var(--ex-line); border-radius:16px;}
     @media (max-width:1000px){ .ex-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} .ex-two{grid-template-columns:minmax(0,1fr);} }
     @media (max-width:560px){ .ex-clients{grid-template-columns:minmax(0,1fr) auto 52px 48px;} .ex-clients .ex-track{display:none;} .ex-kpis{grid-template-columns:minmax(0,1fr);} .ex-top-in, .ex-main{padding-left:16px; padding-right:16px;} .ex-h1{font-size:24px;} .ex-bars, .ex-bar-labels{gap:12px; padding:0 4px;} }
@@ -506,9 +513,10 @@ function loadEmbed(name){
   </div>
 
   <script>
-  // Tablero ejecutivo de la portada. Lee /api/dashboard-data una vez y arma:
-  //  - Financial: filas del P&L (_source="pnl"), por Cliente, columnas de semana ISO.
-  //  - Operational: KPIs operativos de cada cliente (_source="opkpis<cliente>"), por fecha.
+  // Tablero ejecutivo de la portada.
+  //  - Financial: /api/dashboard-data, filas con _source="pnl" (hoja "financials pe - claude":
+  //    P&L mensual del pais, revenue y gross profit mensual por cliente, forecast y palancas), en USD.
+  //  - Operational: el mismo webhook, KPIs operativos de cada cliente (_source="opkpis<cliente>").
   // Todo se agrupa por trimestre calendario y se compara contra el trimestre anterior.
   (function(){
     const root = document.getElementById('view-landing');
@@ -516,33 +524,152 @@ function loadEmbed(name){
     const body = document.getElementById('exBody');
     const qBar = document.getElementById('exQuarters');
 
-    // Clientes conocidos: nombre visible, valores posibles de la columna "Cliente" del P&L
-    // (en minusculas) y la fuente de KPIs operativos con las columnas que usa cada una.
-    const CLIENTS = [
-      { name:'Cencosud',  fin:['cencosud pe','cencosud'], ops:{ tag:'opkpiscencosud', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' } },
-      { name:'Tottus',    fin:['tottus'],                 ops:{ tag:'opkpistottus',   date:'FECHA', orders:'# Pedidos Entregados', onTime:'% Ontime' } },
-      { name:'Plaza Vea', fin:['plaza vea'],              ops:{ tag:'opkpisplazavea', date:'Fecha', orders:'#Pedidos Entregados', onTime:'On time' } },
-      { name:'PedidosYa', fin:['pedidosya'],              ops:null },
-      { name:'Superpet',  fin:['superpet'],               ops:{ tag:'opkpissuperpet', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' } },
+    // KPIs operativos: fuente del webhook y columnas que usa cada cliente.
+    const OPS_CLIENTS = [
+      { name:'Cencosud',  href:'#/cencosud', tag:'opkpiscencosud', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' },
+      { name:'Tottus',    href:'#/tottus',   tag:'opkpistottus',   date:'FECHA', orders:'# Pedidos Entregados', onTime:'% Ontime' },
+      { name:'Plaza Vea', href:'#/plazavea', tag:'opkpisplazavea', date:'Fecha', orders:'#Pedidos Entregados', onTime:'On time' },
+      { name:'Superpet',  href:'#/superpet', tag:'opkpissuperpet', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' },
     ];
     const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    const MES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
     const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const norm = v => String(v == null ? '' : v).trim().toLowerCase();
+    const fmt1 = v => Math.abs(v).toLocaleString('es-PE', { maximumFractionDigits:1 });
 
-    // ---------- parseo ----------
+    // ---------- trimestres ----------
+    const qKey = (y, m) => y + '-Q' + (Math.floor(m / 3) + 1);           // m: 0-11
+    const qLabel = k => { const [y, q] = k.split('-'); return q + ' ' + y; };
+    const qMonthKeys = k => { const [y, q] = k.split('-Q'); return [0,1,2].map(i => y + '-' + String((+q - 1) * 3 + i + 1).padStart(2, '0')); };
+    function shiftQ(k, n){ let [y, q] = k.split('-Q').map(Number); q += n; while(q < 1){ q += 4; y--; } while(q > 4){ q -= 4; y++; } return y + '-Q' + q; }
+    const monthIdx = mk => +mk.slice(5, 7) - 1;
+
+    // ---------- financial: filas _source="pnl" del webhook ----------
+    // Las filas llegan como las entrega n8n desde la hoja: un objeto por fila con los encabezados
+    // como claves (pueden traer espacios) y los montos como texto contable ("$ (3,026)", "$ -").
+    const MES_IDX = { enero:0, febrero:1, marzo:2, abril:3, mayo:4, junio:5, julio:6, agosto:7, septiembre:8, setiembre:8, octubre:9, noviembre:10, diciembre:11 };
+    const EN_IDX = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+    const COUNTRY_CONCEPTS = { 'revenue':'revenue', 'total cost of sales':'costOfSales', 'net revenue':'grossProfit', 'gross profit':'grossProfit', 'total opex':'opex', 'ebitda':'ebitda', 'interest':'interest', 'ebt':'ebt' };
+    const mk = (y, m) => y + '-' + String(m + 1).padStart(2, '0');
     function money(raw){
-      if(raw === undefined || raw === null) return 0;
+      if(raw === undefined || raw === null) return null;
       if(typeof raw === 'number') return raw;
-      let v = String(raw).trim();
-      if(v === '' || v === '-') return 0;
+      let v = String(raw).replace(/[$\s\\]/g, '');
+      if(v === '' ) return null;
+      if(v === '-') return 0;
       let neg = false;
-      if(v.startsWith('(') && v.endsWith(')')){ neg = true; v = v.slice(1,-1); }
-      const n = parseFloat(v.replace(/,/g,'').replace('%','').trim());
-      return Number.isFinite(n) ? (neg ? -n : n) : 0;
+      if(v.startsWith('(') && v.endsWith(')')){ neg = true; v = v.slice(1, -1); }
+      const n = parseFloat(v.replace(/,/g, '').replace('%', ''));
+      return Number.isFinite(n) ? (neg ? -n : n) : null;
     }
-    function pct(raw){ // devuelve 0-100, o null si viene vacio
+    function finFromRows(rows){
+      const country = {};            // campo -> { "2026-07": valor }
+      const customers = [];
+      const fcst = {};               // cliente -> { mes: valor }
+      const levers = { month:null, items:[] };
+      rows.forEach(r => {
+        if(srcTag(r) !== 'pnl') return;
+        const f = flat(r), o = {};
+        Object.keys(f).forEach(key => { o[key.trim().toLowerCase()] = f[key]; });
+        const txt = key => String(o[key] == null ? '' : o[key]).trim();
+        // P&L del pais: "Concept" + columnas Jan'25, Feb'25...
+        if('concept' in o){
+          const field = COUNTRY_CONCEPTS[txt('concept').toLowerCase()];
+          if(!field) return;
+          Object.keys(o).forEach(key => {
+            const m = key.match(/^([a-z]{3})['’](\d{2})$/);
+            if(!m || !(m[1] in EN_IDX)) return;
+            const v = money(o[key]);
+            if(v == null) return;
+            (country[field] = country[field] || {})[mk(2000 + +m[2], EN_IDX[m[1]])] = v;
+          });
+          return;
+        }
+        // Mensual por cliente: "Mes Completo" = "2026 09. Septiembre"
+        if('mes completo' in o && 'customer' in o){
+          const m = txt('mes completo').match(/^(\d{4})\s*(\d{1,2})\./);
+          const name = txt('customer');
+          if(!m || !name || /^(peru|perú|total)$/i.test(name)) return;
+          const rev = money(o['revenue usd'] ?? o['revenue']), gp = money(o['gross profit']);
+          if(rev == null) return;
+          customers.push({ month:mk(+m[1], +m[2] - 1), customer:name, revenue:rev, grossProfit:gp == null ? rev - (money(o['net cost usd']) || 0) : gp });
+          return;
+        }
+        // Palancas: "Cambios/mejoras para Octubre" y luego una fila por cliente con el texto
+        if('mes' in o && !txt('customer')){
+          const head = txt('mes').match(/para\s+([a-záé]+)/i);
+          if(head && head[1].toLowerCase() in MES_IDX){ levers.monthName = head[1].toLowerCase(); return; }
+          const text = Object.keys(o).filter(key => key !== 'mes' && key !== '_source' && key !== 'row_number').map(key => txt(key)).find(t => t.length > 30);
+          if(txt('mes') && text) levers.items.push({ customer:txt('mes'), text });
+          return;
+        }
+        // Forecast: "Customer" + columnas "octubre 26", "noviembre 26"...
+        if('customer' in o){
+          const name = txt('customer');
+          Object.keys(o).forEach(key => {
+            const m = key.match(/^([a-záé]+)\s+(\d{2})$/);
+            if(!m || !(m[1] in MES_IDX)) return;
+            const v = money(o[key]);
+            if(v == null || !name) return;
+            (fcst[name] = fcst[name] || {})[mk(2000 + +m[2], MES_IDX[m[1]])] = v;
+          });
+          return;
+        }
+      });
+
+      // Meses del pais: los del P&L; si no vino, se suman los clientes.
+      let months = Object.keys(country.revenue || {}).sort();
+      const series = {};
+      if(months.length){
+        ['revenue','costOfSales','grossProfit','opex','ebitda','interest','ebt'].forEach(fl => { series[fl] = country[fl] ? months.map(m => country[fl][m] ?? null) : months.map(() => null); });
+      } else {
+        months = [...new Set(customers.map(c => c.month))].sort();
+        series.revenue = months.map(m => customers.filter(c => c.month === m).reduce((s, c) => s + c.revenue, 0));
+        series.grossProfit = months.map(m => customers.filter(c => c.month === m).reduce((s, c) => s + c.grossProfit, 0));
+        ['opex','ebitda','ebt'].forEach(fl => { series[fl] = months.map(() => null); });
+      }
+      const totalName = Object.keys(fcst).find(n => /^(peru|perú|total)$/i.test(n));
+      const fMonths = [...new Set(Object.values(fcst).flatMap(x => Object.keys(x)))].sort();
+      const fCustomers = {};
+      Object.keys(fcst).filter(n => n !== totalName).forEach(n => { fCustomers[n] = fMonths.map(m => fcst[n][m] || 0); });
+      const forecast = fMonths.length ? { months:fMonths, customers:fCustomers,
+        total: totalName ? fMonths.map(m => fcst[totalName][m] || 0) : fMonths.map((m, i) => Object.values(fCustomers).reduce((s, v) => s + v[i], 0)) } : null;
+      if(levers.monthName) levers.month = months.length ? (months[months.length - 1].slice(0, 4) + '-' + String(MES_IDX[levers.monthName] + 1).padStart(2, '0')) : null;
+      return { country:{ months, ...series }, customers, forecast, levers: levers.items.length && levers.month ? levers : null, hasCountryPnl: !!Object.keys(country).length };
+    }
+
+    // ---------- financial: agregados por trimestre ----------
+    function finCountry(fin, k){
+      const idx = qMonthKeys(k).map(mk => fin.country.months.indexOf(mk));
+      if(idx.some(i => i < 0)) return null;
+      const sum = f => fin.country[f].some((v, i) => idx.includes(i) && v != null) ? idx.reduce((s, i) => s + (fin.country[f][i] || 0), 0) : null;
+      const r = { rev:sum('revenue'), gp:sum('grossProfit'), opex:sum('opex'), ebitda:sum('ebitda'), ebt:sum('ebt'),
+        monthly: idx.map((i, j) => ({ label:MESES[monthIdx(qMonthKeys(k)[j])], rev:fin.country.revenue[i] })) };
+      r.margin = r.rev ? r.gp / r.rev * 100 : null;
+      r.ebitdaMargin = r.rev && r.ebitda != null ? r.ebitda / r.rev * 100 : null;
+      return r;
+    }
+    function finCustomers(fin, k){
+      const mks = qMonthKeys(k), map = new Map();
+      fin.customers.forEach(c => {
+        if(!mks.includes(c.month)) return;
+        if(!map.has(c.customer)) map.set(c.customer, { name:c.customer, rev:0, gp:0, months:0 });
+        const a = map.get(c.customer); a.rev += c.revenue; a.gp += c.grossProfit; a.months++;
+      });
+      map.forEach(a => { a.margin = a.rev ? a.gp / a.rev * 100 : null; });
+      return map;
+    }
+    function forecastFor(fin, k){
+      const f = fin.forecast; if(!f) return null;
+      const idx = qMonthKeys(k).map(mk => f.months.indexOf(mk));
+      if(idx.some(i => i < 0)) return null;
+      const customers = Object.keys(f.customers).map(n => ({ name:n, rev:idx.reduce((s, i) => s + f.customers[n][i], 0) }));
+      return { total:idx.reduce((s, i) => s + f.total[i], 0), monthly:idx.map((i, j) => ({ label:MESES[monthIdx(qMonthKeys(k)[j])], rev:f.total[i] })), customers };
+    }
+
+    // ---------- operational (webhook) ----------
+    function srcTag(r){ return (r && typeof r._source === 'string') ? r._source : (r && r._source && r._source._source) || ''; }
+    function flat(r){ return (r && typeof r._source === 'object') ? r._source : r; }
+    function pct(raw){ // 0-100, o null si viene vacio
       if(raw === undefined || raw === null) return null;
       if(typeof raw === 'number') return raw <= 1 ? raw * 100 : raw;
       const s = String(raw).trim();
@@ -557,307 +684,241 @@ function loadEmbed(name){
       const n = parseInt(String(raw).replace(/[^\d-]/g,''), 10);
       return Number.isFinite(n) ? n : 0;
     }
-    function isoDate(raw){
+    function ymOf(raw){
       if(!raw) return null;
       const s = String(raw).trim();
       let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if(m) return { y:+m[1], m:+m[2]-1 };
+      if(m) return { y:+m[1], m:+m[2] - 1 };
       m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if(m) return { y:+m[3], m:+m[2]-1 };
+      if(m) return { y:+m[3], m:+m[2] - 1 };
       return null;
     }
-    // Mes de una columna de semana del P&L ("28", "27.1", "27.2"): misma regla que el bundle P&L
-    // (jueves de la semana ISO; lunes para ".1", domingo para ".2").
-    function weekMonth(key, year){
-      const m = String(key).match(/^(\d+)(?:\.(\d))?$/);
-      if(!m) return null;
-      const week = +m[1], wd = m[2] === '1' ? 1 : m[2] === '2' ? 7 : 4;
-      const jan4 = new Date(Date.UTC(year, 0, 4));
-      const mon1 = new Date(jan4); mon1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1));
-      const d = new Date(mon1); d.setUTCDate(mon1.getUTCDate() + (week - 1) * 7 + (wd - 1));
-      return { y:d.getUTCFullYear(), m:d.getUTCMonth(), end:new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + (wd === 4 ? 3 : 0))) };
-    }
-    const qKey = (y, m) => y + '-Q' + (Math.floor(m / 3) + 1);
-    const qLabel = k => { const [y, q] = k.split('-'); return q + ' ' + y; };
-    function qMonths(k){ const [y, q] = k.split('-Q'); const m0 = (+q - 1) * 3; return [0,1,2].map(i => ({ y:+y, m:m0 + i })); }
-    function prevQ(k){ let [y, q] = k.split('-Q').map(Number); q--; if(q === 0){ q = 4; y--; } return y + '-Q' + q; }
-
-    function srcTag(r){ return (r && typeof r._source === 'string') ? r._source : (r && r._source && r._source._source) || ''; }
-    function flat(r){ return (r && typeof r._source === 'object') ? r._source : r; }
-    function clientOf(raw){
-      const n = norm(raw);
-      const c = CLIENTS.find(c => c.fin.includes(n));
-      return c ? c.name : String(raw || '').trim();
-    }
-
-    // ---------- financial: Revenue y Gross Profit por cliente y mes ----------
-    function buildFinance(rows){
-      const year = new Date().getFullYear();
-      const byClient = new Map(); // cliente -> filas
-      rows.forEach(r => {
-        const tag = srcTag(r);
-        if(tag !== 'pnl' && tag !== 'cencosud') return; // "cencosud" era el tag anterior del P&L
-        const f = flat(r);
-        if(norm(f['Cliente']) === 'todos') return; // consolidado: se recalcula sumando clientes
-        const name = clientOf(f['Cliente']);
-        if(!name) return;
-        if(!byClient.has(name)) byClient.set(name, []);
-        byClient.get(name).push(f);
-      });
-      const out = new Map(); // "cliente|y-m" -> {rev, gp}
-      let maxEnd = null;
-      byClient.forEach((list, name) => {
-        // Una fila "TOTAL" junto a tiendas reales es redundante; si es la unica tienda, se usa.
-        const stores = new Set(list.map(f => String(f['Tienda'] || '').trim()).filter(Boolean));
-        const skipTotal = stores.size > 1 && stores.has('TOTAL');
-        const vert = f => { const c = String(f['Vertical'] ?? f['PICKING'] ?? '').trim().toUpperCase(); return c.startsWith('TODO') ? 'TODO' : c.startsWith('PICKING') ? 'PICKING' : c.startsWith('DELIVERY') ? 'DELIVERY' : c; };
-        const hasTodo = list.some(f => vert(f) === 'TODO');
-        list.forEach(f => {
-          if(skipTotal && String(f['Tienda'] || '').trim() === 'TOTAL') return;
-          const v = vert(f);
-          if(hasTodo ? v !== 'TODO' : (v !== 'PICKING' && v !== 'DELIVERY')) return;
-          const concept = String(f['Concepto'] || '').trim();
-          if(concept !== 'Revenue' && concept !== 'Gross Profit') return;
-          Object.keys(f).forEach(k => {
-            if(!/^\d+(\.\d+)?$/.test(k)) return;
-            const wm = weekMonth(k, year);
-            if(!wm) return;
-            const val = money(f[k]);
-            const key = name + '|' + wm.y + '-' + wm.m;
-            if(!out.has(key)) out.set(key, { rev:0, gp:0 });
-            out.get(key)[concept === 'Revenue' ? 'rev' : 'gp'] += val;
-            if(val !== 0 && (!maxEnd || wm.end > maxEnd)) maxEnd = wm.end;
-          });
-        });
-      });
-      return { cells: out, clients: [...byClient.keys()], maxEnd };
-    }
-    function finFor(fin, client, months){
-      let rev = 0, gp = 0, has = false;
-      months.forEach(({ y, m }) => {
-        const names = client ? [client] : fin.clients;
-        names.forEach(n => { const c = fin.cells.get(n + '|' + y + '-' + m); if(c){ rev += c.rev; gp += c.gp; has = has || c.rev !== 0; } });
-      });
-      return has ? { rev, gp, margin: rev ? gp / rev * 100 : null } : null;
-    }
-
-    // ---------- operational: pedidos, on time y fill rate por cliente y trimestre ----------
     function buildOps(rows){
-      const out = new Map(); // "cliente|qKey" -> acumulados
-      const quarters = new Set();
-      CLIENTS.forEach(c => {
-        if(!c.ops) return;
+      const out = new Map();
+      OPS_CLIENTS.forEach(c => {
         rows.forEach(r => {
-          if(srcTag(r) !== c.ops.tag) return;
-          const f = flat(r);
-          const d = isoDate(f[c.ops.date]);
+          if(srcTag(r) !== c.tag) return;
+          const f = flat(r), d = ymOf(f[c.date]);
           if(!d) return;
-          const orders = int(f[c.ops.orders]);
-          const k = qKey(d.y, d.m);
-          quarters.add(k);
-          const key = c.name + '|' + k;
+          const orders = int(f[c.orders]), key = c.name + '|' + qKey(d.y, d.m);
           if(!out.has(key)) out.set(key, { orders:0, otW:0, otN:0, fW:0, fN:0 });
           const a = out.get(key);
           a.orders += orders;
-          const ot = pct(f[c.ops.onTime]);
+          const ot = pct(f[c.onTime]);
           if(ot != null && orders > 0){ a.otW += ot * orders; a.otN += orders; }
-          if(c.ops.fill){ const fr = pct(f[c.ops.fill]); if(fr != null && orders > 0){ a.fW += fr * orders; a.fN += orders; } }
+          if(c.fill){ const fr = pct(f[c.fill]); if(fr != null && orders > 0){ a.fW += fr * orders; a.fN += orders; } }
         });
       });
-      return { cells: out, quarters };
+      return out;
     }
-    function opsFor(ops, clientNames, k){
+    function opsFor(ops, names, k){
       const a = { orders:0, otW:0, otN:0, fW:0, fN:0 }; let has = false;
-      clientNames.forEach(n => { const c = ops.cells.get(n + '|' + k); if(c){ has = true; for(const x in a) a[x] += c[x]; } });
-      if(!has) return null;
-      return { orders:a.orders, onTime:a.otN ? a.otW / a.otN : null, fill:a.fN ? a.fW / a.fN : null };
+      names.forEach(n => { const c = ops.get(n + '|' + k); if(c){ has = true; for(const x in a) a[x] += c[x]; } });
+      return has ? { orders:a.orders, onTime:a.otN ? a.otW / a.otN : null, fill:a.fN ? a.fW / a.fN : null } : null;
     }
 
     // ---------- formato ----------
-    function soles(v){
+    function usd(v){
       if(v == null) return '—';
       const a = Math.abs(v), sign = v < 0 ? '−' : '';
-      if(a >= 1e6) return sign + 'S/ ' + (a / 1e6).toLocaleString('es-PE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' M';
-      if(a >= 1e3) return sign + 'S/ ' + (a / 1e3).toLocaleString('es-PE', { maximumFractionDigits:1 }) + ' k';
-      return sign + 'S/ ' + a.toLocaleString('es-PE', { maximumFractionDigits:0 });
+      if(a >= 1e6) return sign + 'US$ ' + (a / 1e6).toLocaleString('es-PE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' M';
+      if(a >= 1e3) return sign + 'US$ ' + (a / 1e3).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' k';
+      return sign + 'US$ ' + a.toLocaleString('es-PE', { maximumFractionDigits:0 });
     }
+    const signedPct = v => Math.abs(v) < 0.5 ? '0%' : (v > 0 ? '+' : '−') + Math.abs(v).toLocaleString('es-PE', { maximumFractionDigits:0 }) + '%';
     const count = v => v == null ? '—' : Math.round(v).toLocaleString('es-PE');
-    const pc = v => v == null ? '—' : v.toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
-    function growth(cur, prev){ return (cur == null || prev == null || !prev) ? null : (cur - prev) / Math.abs(prev) * 100; }
-    function deltaPct(d, suffix, emptyTxt){ // variacion relativa
-      if(d == null) return { txt:emptyTxt || 'Sin trimestre anterior', cls:'ex-flat' };
-      const s = (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString('es-PE', { maximumFractionDigits:1 }) + '%' + (suffix || '');
-      return { txt:s, cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down' };
+    const pc = v => v == null ? '—' : (v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
+    const growth = (c, p) => (c == null || p == null || !p) ? null : (c - p) / Math.abs(p) * 100;
+    function dPct(d, suffix){
+      if(d == null) return { txt:'Sin trimestre anterior', cls:'ex-flat' };
+      return { txt:(d >= 0 ? '▲ ' : '▼ ') + fmt1(d) + '%' + (suffix || ''), cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down' };
     }
-    function deltaPp(cur, prev, suffix){ // variacion en puntos porcentuales
+    function dPp(cur, prev, suffix){
       if(cur == null || prev == null) return { txt:'Sin trimestre anterior', cls:'ex-flat', d:null };
       const d = cur - prev;
-      const s = (Math.abs(d) < 0.05 ? '= ' : d > 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' pp' + (suffix || '');
-      return { txt:s, cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down', d };
+      return { txt:(Math.abs(d) < 0.05 ? '= ' : d > 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' pp' + (suffix || ''), cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down', d };
+    }
+    function dAbs(cur, prev, suffix){ // variacion absoluta en USD (para EBITDA, que cambia de signo)
+      if(cur == null || prev == null) return { txt:'Sin trimestre anterior', cls:'ex-flat' };
+      const d = cur - prev;
+      return { txt:(d >= 0 ? '▲ ' : '▼ ') + usd(Math.abs(d)) + (suffix || ''), cls: d > 0 ? 'ex-up' : d < 0 ? 'ex-down' : 'ex-flat' };
     }
 
     // ---------- render ----------
-    let DATA = null, current = null;
+    let FIN = null, OPS = null, OPS_ERROR = null, current = null, QUARTERS = [];
 
-    function availableQuarters(fin, ops){
-      const set = new Set(ops.quarters);
-      fin.cells.forEach((v, key) => { if(v.rev !== 0){ const [y, m] = key.split('|')[1].split('-').map(Number); set.add(qKey(y, m)); } });
-      return [...set].sort();
-    }
-    // Ultimo trimestre cerrado: aquel cuyo ultimo dia ya esta cubierto por los datos del P&L.
-    function defaultQuarter(qs, fin){
-      if(!qs.length) return null;
-      if(fin.maxEnd){
-        const closed = qs.filter(k => { const ms = qMonths(k); const last = ms[2]; const end = new Date(Date.UTC(last.y, last.m + 1, 0)); return fin.maxEnd >= end; });
-        if(closed.length) return closed[closed.length - 1];
-      }
-      return qs[qs.length - 1];
-    }
-
-    function renderQuarterBar(qs){
-      const shown = qs.slice(-4);
-      qBar.innerHTML = shown.map(k => `<button type="button" data-q="${k}" aria-pressed="${k === current}">${esc(qLabel(k))}</button>`).join('');
-      qBar.onclick = e => { const b = e.target.closest('button'); if(!b) return; current = b.dataset.q; renderQuarterBar(qs); render(); };
+    function renderQuarterBar(){
+      qBar.innerHTML = QUARTERS.slice(-4).map(k => `<button type="button" data-q="${k}" aria-pressed="${k === current}">${esc(qLabel(k))}</button>`).join('');
+      qBar.onclick = e => { const b = e.target.closest('button'); if(!b) return; current = b.dataset.q; renderQuarterBar(); render(); };
     }
 
     function render(){
-      const { fin, ops } = DATA;
-      const k = current, pk = prevQ(k);
-      const months = qMonths(k), pMonths = qMonths(pk);
-      const opsNames = CLIENTS.filter(c => c.ops).map(c => c.name);
-      const cur = finFor(fin, null, months), prev = finFor(fin, null, pMonths);
-      const lastMonthWithData = months.filter(({ y, m }) => fin.clients.some(n => { const c = fin.cells.get(n + '|' + y + '-' + m); return c && c.rev !== 0; }));
-      // Trimestre en curso: sus totales (revenue, pedidos) no se comparan contra un trimestre completo.
-      const inProgress = !fin.maxEnd || fin.maxEnd < new Date(Date.UTC(months[2].y, months[2].m + 1, 0));
-      const totalGrowth = (c, p) => inProgress ? null : growth(c, p);
-      const oCur = opsFor(ops, opsNames, k), oPrev = opsFor(ops, opsNames, pk);
-      const rangeTxt = MESES[months[0].m] + '–' + MESES[months[2].m] + ' ' + months[0].y;
+      const k = current, pk = shiftQ(k, -1), yk = shiftQ(k, -4), nk = shiftQ(k, 1);
+      const cur = finCountry(FIN, k), prev = finCountry(FIN, pk), yago = finCountry(FIN, yk);
+      const custCur = finCustomers(FIN, k), custPrev = finCustomers(FIN, pk);
+      const isLatest = k === QUARTERS[QUARTERS.length - 1];
+      const fcst = isLatest ? forecastFor(FIN, nk) : null;
+      const opsNames = OPS_CLIENTS.map(c => c.name);
+      const oCur = OPS ? opsFor(OPS, opsNames, k) : null, oPrev = OPS ? opsFor(OPS, opsNames, pk) : null;
+      const months = qMonthKeys(k);
+      const rangeTxt = MESES[monthIdx(months[0])] + '–' + MESES[monthIdx(months[2])] + ' ' + k.slice(0, 4);
 
-      // Titular del trimestre
+      const g = growth(cur.rev, prev && prev.rev), gy = growth(cur.rev, yago && yago.rev);
+
+      // Titular
       const parts = [];
-      const g = totalGrowth(cur && cur.rev, prev && prev.rev);
-      if(cur){
-        if(g != null) parts.push(`Revenue ${g >= 0 ? 'creció' : 'cayó'} ${Math.abs(g).toLocaleString('es-PE', { maximumFractionDigits:1 })}% vs ${qLabel(pk)}`);
-        else parts.push(`Revenue ${inProgress ? 'acumulado' : 'de'} ${soles(cur.rev)}`);
-        if(cur.margin != null){
-          if(prev && prev.margin != null) parts.push(`el margen bruto ${cur.margin >= prev.margin ? 'subió' : 'bajó'} a ${pc(cur.margin)}`);
-          else parts.push(`margen bruto de ${pc(cur.margin)}`);
-        }
-      }
-      let headline = parts.length ? parts.join(' y ') + '.' : 'Aún no hay datos financieros para este trimestre.';
-      if(oCur && oCur.onTime != null){
-        if(oPrev && oPrev.onTime != null) headline += ` On time ${oCur.onTime >= oPrev.onTime ? 'mejoró' : 'bajó'} a ${pc(oCur.onTime)}.`;
-        else headline += ` On time de ${pc(oCur.onTime)}.`;
-      }
+      if(g != null) parts.push(`Revenue ${g >= 0 ? 'creció' : 'cayó'} ${fmt1(g)}% vs ${qLabel(pk)}${gy != null ? ` (${gy >= 0 ? '+' : '−'}${fmt1(gy)}% vs ${qLabel(yk)})` : ''}`);
+      else parts.push(`Revenue de ${usd(cur.rev)}`);
+      if(prev && prev.margin != null){
+        const dm = cur.margin - prev.margin;
+        parts.push(`el margen bruto ${Math.abs(dm) >= 3 ? (dm > 0 ? 'se recuperó' : 'se deterioró') : (dm >= 0 ? 'subió' : 'bajó')} a ${pc(cur.margin)} (${qLabel(pk)}: ${pc(prev.margin)})`);
+      } else parts.push(`margen bruto de ${pc(cur.margin)}`);
+      let headline = parts.join(' y ') + '.';
+      if(cur.ebitda == null){}
+      else if(prev && prev.ebitda < 0 && cur.ebitda > 0) headline += ` El EBITDA volvió a terreno positivo: ${usd(cur.ebitda)}.`;
+      else if(prev && prev.ebitda > 0 && cur.ebitda < 0) headline += ` El EBITDA pasó a negativo: ${usd(cur.ebitda)}.`;
+      else headline += ` EBITDA de ${usd(cur.ebitda)}.`;
 
-      // KPIs
-      const enCurso = inProgress ? 'Trimestre en curso' : null;
-      const dRev = deltaPct(g, ' vs ' + qLabel(pk), enCurso);
-      const dMargin = deltaPp(cur && cur.margin, prev && prev.margin);
-      const dOrders = deltaPct(totalGrowth(oCur && oCur.orders, oPrev && oPrev.orders), ' vs ' + qLabel(pk), enCurso);
-      const dOt = deltaPp(oCur && oCur.onTime, oPrev && oPrev.onTime, ' vs ' + qLabel(pk));
-
-      // Por cliente (financial)
-      const finRows = fin.clients.map(n => {
-        const c = finFor(fin, n, months), p = finFor(fin, n, pMonths);
-        return { name:n, cur:c, g:totalGrowth(c && c.rev, p && p.rev) };
-      }).filter(r => r.cur).sort((a, b) => b.cur.rev - a.cur.rev);
-      const maxRev = Math.max(1, ...finRows.map(r => r.cur.rev));
-
-      // Por cliente (operational)
-      const opsRows = CLIENTS.filter(c => c.ops).map(c => {
-        const o = opsFor(ops, [c.name], k), p = opsFor(ops, [c.name], pk);
-        return { name:c.name, cur:o, prev:p, dOt:deltaPp(o && o.onTime, p && p.onTime) };
-      }).filter(r => r.cur);
+      // Clientes (financial)
+      const clientRows = [...custCur.values()].map(c => {
+        const p = custPrev.get(c.name);
+        const isNew = !p || p.months < 3;
+        return { ...c, prev:p, isNew, g: isNew ? null : growth(c.rev, p.rev), dm: p && p.margin != null && !isNew ? c.margin - p.margin : null };
+      }).sort((a, b) => b.rev - a.rev);
+      const maxRev = Math.max(1, ...clientRows.map(r => r.rev));
 
       // Lo que hay que mirar
       const watch = [];
-      const growers = finRows.filter(r => r.g != null).sort((a, b) => b.g - a.g);
-      if(growers.length && growers[0].g > 0) watch.push({ cls:'good', tag:'CRECE', txt:`${growers[0].name} es el cliente que más crece: revenue +${growers[0].g.toLocaleString('es-PE', { maximumFractionDigits:1 })}% vs ${qLabel(pk)}, con margen de ${pc(growers[0].cur.margin)}.` });
-      const otRows = opsRows.filter(r => r.cur.onTime != null).sort((a, b) => a.cur.onTime - b.cur.onTime);
-      if(otRows.length) watch.push({ cls:'warn', tag:'ATENCIÓN', txt:`${otRows[0].name} tiene el on time más bajo del trimestre (${pc(otRows[0].cur.onTime)})${otRows[0].dOt.d != null ? ', ' + (otRows[0].dOt.d >= 0 ? 'mejora' : 'baja') + ' ' + Math.abs(otRows[0].dOt.d).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' pp vs ' + qLabel(pk) : ''}.` });
-      const fallers = growers.filter(r => r.g < 0).sort((a, b) => a.g - b.g);
-      if(fallers.length) watch.push({ cls:'bad', tag:'RIESGO', txt:`${fallers[0].name} cae ${Math.abs(fallers[0].g).toLocaleString('es-PE', { maximumFractionDigits:1 })}% en revenue vs ${qLabel(pk)}.` });
+      const newcomer = clientRows.filter(r => r.isNew && r.months === 3).sort((a, b) => b.rev - a.rev)[0];
+      const bestMargin = clientRows.filter(r => r.margin != null).sort((a, b) => b.margin - a.margin)[0];
+      if(newcomer) watch.push({ cls:'good', tag:'CRECE', txt:`${newcomer.name} completó su primer trimestre completo: ${usd(newcomer.rev)} en revenue${bestMargin && bestMargin.name === newcomer.name ? ' y el mejor margen del portafolio' : ' con margen'} (${pc(newcomer.margin)}).` });
       else {
-        const lowM = finRows.filter(r => r.cur.margin != null).sort((a, b) => a.cur.margin - b.cur.margin)[0];
-        if(lowM && finRows.length > 1) watch.push({ cls:'bad', tag:'MARGEN', txt:`${lowM.name} tiene el margen bruto más bajo del portafolio (${pc(lowM.cur.margin)}).` });
+        const grower = clientRows.filter(r => r.g != null && r.g > 0).sort((a, b) => b.g - a.g)[0];
+        if(grower) watch.push({ cls:'good', tag:'CRECE', txt:`${grower.name} es el cliente que más crece: revenue +${fmt1(grower.g)}% vs ${qLabel(pk)}, con margen de ${pc(grower.margin)}.` });
       }
+      const improver = clientRows.filter(r => r.dm != null && r.dm >= 3).sort((a, b) => b.dm - a.dm)[0];
+      if(improver) watch.push({ cls:'good', tag:'MEJORA', txt:`${improver.name} recupera margen: pasa de ${pc(improver.prev.margin)} en ${qLabel(pk)} a ${pc(improver.margin)}.` });
+      const faller = clientRows.filter(r => r.g != null && r.g <= -5).sort((a, b) => a.g - b.g)[0];
+      const lowM = clientRows.filter(r => r.margin != null).sort((a, b) => a.margin - b.margin)[0];
+      if(faller) watch.push({ cls:'bad', tag:'RIESGO', txt:`${faller.name} cae ${fmt1(faller.g)}% en revenue vs ${qLabel(pk)}${lowM && lowM.name === faller.name ? ` y tiene el margen más bajo del portafolio (${pc(faller.margin)})` : ''}.` });
+      else if(lowM && clientRows.length > 1) watch.push({ cls:'bad', tag:'MARGEN', txt:`${lowM.name} tiene el margen bruto más bajo del portafolio (${pc(lowM.margin)}).` });
+      if(oCur){
+        const otRows = OPS_CLIENTS.map(c => ({ name:c.name, o:opsFor(OPS, [c.name], k) })).filter(r => r.o && r.o.onTime != null).sort((a, b) => a.o.onTime - b.o.onTime);
+        if(otRows.length) watch.push({ cls:'warn', tag:'ATENCIÓN', txt:`${otRows[0].name} tiene el on time más bajo del trimestre (${pc(otRows[0].o.onTime)}).` });
+      }
+      if(fcst) watch.push({ cls:'flat', tag:'PRÓXIMO Q', txt:`Forecast ${qLabel(nk)}: ${usd(fcst.total)} en revenue (${growth(fcst.total, cur.rev) >= 0 ? '+' : '−'}${fmt1(growth(fcst.total, cur.rev))}% vs ${qLabel(k)}), ${FIN.levers ? ` y palancas de precio desde ${MESES[monthIdx(FIN.levers.month)].toLowerCase()}` : ''}.` });
 
-      // Revenue mensual del pais en el trimestre + promedio mensual del trimestre anterior
-      const monthly = months.map(({ y, m }) => { const c = finFor(fin, null, [{ y, m }]); return { label:MESES[m], rev:c ? c.rev : null }; });
+      // KPIs
+      const kpi = (bg, labelColor, label, val, line1, line2) => `<div class="ex-kpi" style="background:${bg}"><span class="ex-k-label" style="color:${labelColor}">${label}</span><span class="ex-k-val ex-num">${val}</span><span class="ex-k-delta ${line1.cls}">${esc(line1.txt)}</span>${line2 ? `<span class="ex-k-delta ${line2.cls}" style="font-weight:400">${esc(line2.txt)}</span>` : ''}</div>`;
+      const dRev = dPct(g, ' vs ' + qLabel(pk));
+      const dRevY = gy != null ? dPct(gy, ' vs ' + qLabel(yk)) : null;
+      const dM = dPp(cur.margin, prev && prev.margin, ' vs ' + qLabel(pk));
+      const dE = dAbs(cur.ebitda, prev && prev.ebitda != null ? prev.ebitda : null, ' vs ' + qLabel(pk));
+      const dOt = dPp(oCur && oCur.onTime, oPrev && oPrev.onTime, ' vs ' + qLabel(pk));
+
+      // Grafico mensual del pais
       const prevAvg = prev ? prev.rev / 3 : null;
-      const scaleMax = Math.max(1, ...monthly.map(x => x.rev || 0), prevAvg || 0) * 1.08;
-      const lastIdx = monthly.map(x => x.rev != null).lastIndexOf(true);
+      const scaleMax = Math.max(1, ...cur.monthly.map(x => x.rev || 0), prevAvg || 0) * 1.08;
 
-      const kpi = (bg, labelColor, label, val, d) => `<div class="ex-kpi" style="background:${bg}"><span class="ex-k-label" style="color:${labelColor}">${label}</span><span class="ex-k-val ex-num">${val}</span><span class="ex-k-delta ${d.cls}">${esc(d.txt)}</span></div>`;
+      // Evolucion trimestral (hasta 7 trimestres con datos)
+      const trendQs = QUARTERS.filter(q => q <= k).slice(-7).map(q => ({ k:q, ...finCountry(FIN, q) }));
+      const trendMax = Math.max(1, ...trendQs.map(t => t.rev));
+
       const meter = (label, v, p) => {
         if(v == null) return '';
-        const down = p != null && v < p;
-        return `<div class="ex-meter"><div class="ex-meter-top"><span>${label}</span><span class="ex-num"><b>${pc(v)}</b>${p != null ? ` <span style="color:var(--ex-muted)">· ${qLabel(pk)} ${pc(p)}</span>` : ''}</span></div>
-          <div class="ex-meter-track"><div class="ex-meter-fill${down ? ' down' : ''}" style="width:${Math.max(0, Math.min(100, v))}%"></div>${p != null ? `<div class="ex-meter-mark" style="left:${Math.max(0, Math.min(100, p))}%" title="${qLabel(pk)}"></div>` : ''}</div></div>`;
+        return `<div class="ex-meter"><div class="ex-meter-top"><span>${label}</span><span class="ex-num"><b>${pc(v)}</b>${p != null ? ` <span style="color:var(--ex-muted)">· ${esc(qLabel(pk))} ${pc(p)}</span>` : ''}</span></div>
+          <div class="ex-meter-track"><div class="ex-meter-fill${p != null && v < p ? ' down' : ''}" style="width:${Math.max(0, Math.min(100, v))}%"></div>${p != null ? `<div class="ex-meter-mark" style="left:${Math.max(0, Math.min(100, p))}%"></div>` : ''}</div></div>`;
       };
-      const statusChip = r => {
-        if(r.dOt.d == null) return '<span class="ex-chip flat">Sin comparación</span>';
-        if(r.dOt.d >= 0.5) return '<span class="ex-chip good">Mejora</span>';
-        if(r.dOt.d <= -0.5) return '<span class="ex-chip bad">Empeora</span>';
-        return '<span class="ex-chip warn">Estable</span>';
-      };
+      const opsRows = OPS ? OPS_CLIENTS.map(c => { const o = opsFor(OPS, [c.name], k), p = opsFor(OPS, [c.name], pk); return { ...c, cur:o, dOt:dPp(o && o.onTime, p && p.onTime) }; }).filter(r => r.cur) : [];
+      const chip = r => r.dOt.d == null ? '<span class="ex-chip flat">Sin comparación</span>' : r.dOt.d >= 0.5 ? '<span class="ex-chip good">Mejora</span>' : r.dOt.d <= -0.5 ? '<span class="ex-chip bad">Empeora</span>' : '<span class="ex-chip warn">Estable</span>';
 
       body.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:40px;">
         <section class="ex-sec" aria-labelledby="exResumen">
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <span class="ex-eyebrow">Resumen ejecutivo · ${esc(qLabel(k))} (${esc(rangeTxt)})${inProgress ? ' · en curso' : ''}</span>
+            <span class="ex-eyebrow">Resumen ejecutivo · ${esc(qLabel(k))} (${esc(rangeTxt)})</span>
             <h1 class="ex-h1" id="exResumen">${esc(headline)}</h1>
-            ${inProgress ? `<p class="ex-note">El trimestre aún no termina: el P&amp;L tiene datos hasta ${lastMonthWithData.length ? esc(MESES[lastMonthWithData[lastMonthWithData.length - 1].m].toLowerCase()) : 'ahora'}.</p>` : ''}
           </div>
           <div class="ex-kpis">
-            ${kpi('var(--ex-p-blue)', 'var(--ex-blue-strong)', 'Revenue', soles(cur && cur.rev), dRev)}
-            ${kpi('var(--ex-p-yellow)', 'var(--ex-warn)', 'Gross profit', soles(cur && cur.gp), { txt:'Margen ' + pc(cur && cur.margin) + (dMargin.d != null ? ' · ' + dMargin.txt : ''), cls:dMargin.cls })}
-            ${kpi('var(--ex-p-green)', 'var(--ex-good)', 'Pedidos', count(oCur && oCur.orders), dOrders)}
-            ${kpi('var(--ex-p-pink)', '#a72774', 'On time', pc(oCur && oCur.onTime), dOt)}
+            ${kpi('var(--ex-p-blue)', 'var(--ex-blue-strong)', 'Revenue', usd(cur.rev), dRev, dRevY)}
+            ${kpi('var(--ex-p-yellow)', 'var(--ex-warn)', 'Gross profit', usd(cur.gp), { txt:'Margen ' + pc(cur.margin), cls:'' }, dM)}
+            ${cur.ebitda != null ? kpi('var(--ex-p-green)', 'var(--ex-good)', 'EBITDA', usd(cur.ebitda), { txt:'Margen EBITDA ' + pc(cur.ebitdaMargin), cls:'' }, dE) : kpi('var(--ex-p-green)', 'var(--ex-good)', 'Clientes activos', String(clientRows.length), { txt:'Con revenue en el trimestre', cls:'' })}
+            ${kpi('var(--ex-p-pink)', '#a72774', 'On time', pc(oCur && oCur.onTime), oCur ? dOt : { txt: OPS_ERROR ? 'Datos operativos no disponibles' : 'Sin datos operativos', cls:'ex-flat' }, oCur ? { txt:count(oCur.orders) + ' pedidos', cls:'' } : null)}
           </div>
           ${watch.length ? `<div class="ex-watch"><b style="font-size:14px; font-weight:600;">Lo que hay que mirar</b>${watch.map(w => `<div class="ex-watch-row"><span class="ex-chip ${w.cls}">${w.tag}</span><span>${esc(w.txt)}</span></div>`).join('')}</div>` : ''}
         </section>
 
         <section class="ex-sec" aria-labelledby="exFin">
-          <div class="ex-head"><h2 class="ex-h2" id="exFin">Financial overview</h2><a class="ex-link" href="#/financials">Ver P&amp;L completo →</a></div>
+          <div class="ex-head"><h2 class="ex-h2" id="exFin">Financial overview</h2><span class="ex-note">Cifras en USD</span></div>
           <div class="ex-two">
             <div class="ex-card">
               <div class="ex-card-title"><b>País · Revenue mensual</b><span>${prevAvg != null ? 'Línea = promedio mensual ' + esc(qLabel(pk)) : ''}</span></div>
               <div class="ex-bars">
-                ${prevAvg != null ? `<div class="ex-avg" style="bottom:${(prevAvg / scaleMax * 100).toFixed(1)}%" title="Promedio mensual ${esc(qLabel(pk))}: ${esc(soles(prevAvg))}"></div>` : ''}
-                ${monthly.map((x, i) => `<div class="ex-bar${i === lastIdx ? ' last' : ''}"><div style="height:${x.rev ? (x.rev / scaleMax * 100).toFixed(1) : 0}%" title="${esc(x.label)}: ${esc(soles(x.rev))}"></div></div>`).join('')}
+                ${prevAvg != null ? `<div class="ex-avg" style="bottom:${(prevAvg / scaleMax * 100).toFixed(1)}%" title="Promedio mensual ${esc(qLabel(pk))}: ${esc(usd(prevAvg))}"></div>` : ''}
+                ${cur.monthly.map((x, i) => `<div class="ex-bar${i === 2 ? ' last' : ''}"><div style="height:${(x.rev / scaleMax * 100).toFixed(1)}%" title="${esc(x.label)}: ${esc(usd(x.rev))}"></div></div>`).join('')}
               </div>
-              <div class="ex-bar-labels">${monthly.map(x => `<span>${esc(x.label)}<br><b class="ex-num" style="font-size:14px; color:var(--ex-ink)">${x.rev != null ? esc(soles(x.rev)) : '—'}</b></span>`).join('')}</div>
+              <div class="ex-bar-labels">${cur.monthly.map(x => `<span>${esc(x.label)}<br><b class="ex-num" style="font-size:14px; color:var(--ex-ink)">${esc(usd(x.rev))}</b></span>`).join('')}</div>
               <div class="ex-stats">
-                <div class="ex-stat"><span>Gross profit</span><b class="ex-num">${soles(cur && cur.gp)}</b></div>
-                <div class="ex-stat"><span>Margen bruto</span><b class="ex-num">${pc(cur && cur.margin)}</b></div>
-                <div class="ex-stat"><span>Costo total</span><b class="ex-num">${soles(cur ? cur.rev - cur.gp : null)}</b></div>
+                <div class="ex-stat"><span>Gross profit</span><b class="ex-num">${usd(cur.gp)}</b></div>
+                <div class="ex-stat"><span>Margen bruto</span><b class="ex-num">${pc(cur.margin)}</b></div>
+                ${cur.opex != null ? `<div class="ex-stat"><span>Opex</span><b class="ex-num">${usd(cur.opex)}</b></div>` : ''}
+                ${cur.ebitda != null ? `<div class="ex-stat"><span>EBITDA</span><b class="ex-num ${cur.ebitda < 0 ? 'ex-down' : ''}">${usd(cur.ebitda)}</b></div>` : ''}
+                ${cur.ebt != null ? `<div class="ex-stat"><span>EBT</span><b class="ex-num ${cur.ebt < 0 ? 'ex-down' : ''}">${usd(cur.ebt)}</b></div>` : ''}
               </div>
             </div>
             <div class="ex-card">
-              <div class="ex-card-title"><b>Por cliente · Revenue ${esc(qLabel(k))}</b><span>Margen · Δ vs ${esc(qLabel(pk))}</span></div>
-              ${finRows.length ? `<div class="ex-clients">
-                ${finRows.map(r => `<span style="font-weight:500">${esc(r.name)}</span>
-                  <div class="ex-track${r.g != null && r.g < 0 ? ' neg' : ''}"><div style="width:${Math.max(2, r.cur.rev / maxRev * 100).toFixed(1)}%"></div></div>
-                  <span class="ex-num ex-r">${esc(soles(r.cur.rev))}</span>
-                  <span class="ex-num ex-r">${pc(r.cur.margin)}</span>
-                  <span class="ex-num ex-r ${r.g == null ? 'ex-flat' : r.g >= 0 ? 'ex-up' : 'ex-down'}">${r.g == null ? '—' : (r.g >= 0 ? '+' : '−') + Math.abs(r.g).toLocaleString('es-PE', { maximumFractionDigits:0 }) + '%'}</span>`).join('')}
-              </div>` : '<p class="ex-note">Sin datos financieros por cliente en este trimestre.</p>'}
+              <div class="ex-card-title"><b>Por cliente · Revenue ${esc(qLabel(k))}</b><span>Margen bruto · Δ revenue vs ${esc(qLabel(pk))}</span></div>
+              ${clientRows.length ? `<div class="ex-clients">
+                ${clientRows.map(r => `<span style="font-weight:500">${esc(r.name)}</span>
+                  <div class="ex-track${r.g != null && r.g < 0 ? ' neg' : ''}"><div style="width:${Math.max(2, r.rev / maxRev * 100).toFixed(1)}%"></div></div>
+                  <span class="ex-num ex-r">${esc(usd(r.rev))}</span>
+                  <span class="ex-num ex-r ${r.margin < 10 ? 'ex-down' : ''}">${pc(r.margin)}</span>
+                  <span class="ex-num ex-r ${r.isNew ? 'ex-flat' : r.g >= 0 ? 'ex-up' : 'ex-down'}">${r.isNew ? 'Nuevo' : signedPct(r.g)}</span>`).join('')}
+              </div>
+              <p class="ex-note">Margen en rojo: menor a 10%. "Nuevo": sin trimestre anterior completo.</p>` : '<p class="ex-note">La hoja no trae detalle por cliente para este trimestre.</p>'}
             </div>
           </div>
+
+          <div class="ex-card">
+            <div class="ex-card-title"><b>Evolución trimestral · País</b><span>Revenue · margen bruto${FIN.hasCountryPnl ? ' · EBITDA' : ''}</span></div>
+            <div class="ex-trend">
+              ${trendQs.map(t => `<div class="ex-trend-col${t.k === k ? ' cur' : ''}">
+                <span class="ex-num ex-trend-v">${esc(usd(t.rev))}</span>
+                <div class="ex-trend-bar"><div style="height:${(t.rev / trendMax * 100).toFixed(1)}%"></div></div>
+                <b>${esc(qLabel(t.k))}</b>
+                <span class="ex-num">GM ${pc(t.margin)}</span>
+                ${t.ebitda != null ? `<span class="ex-num ${t.ebitda < 0 ? 'ex-down' : 'ex-up'}">EBITDA ${esc(usd(t.ebitda))}</span>` : ''}
+              </div>`).join('')}
+            </div>
+          </div>
+
+          ${fcst ? `<div class="ex-card">
+            <div class="ex-card-title"><b>Próximo trimestre · Forecast ${esc(qLabel(nk))}</b><span>${esc(usd(fcst.total))} · ${growth(fcst.total, cur.rev) >= 0 ? '+' : '−'}${fmt1(growth(fcst.total, cur.rev))}% vs ${esc(qLabel(k))}</span></div>
+            <div class="ex-two" style="gap:24px;">
+              <div style="display:flex; flex-direction:column; gap:10px; min-width:0;">
+                <div class="ex-clients" style="grid-template-columns:minmax(80px,140px) minmax(0,1fr) auto 52px;">
+                  ${fcst.customers.sort((a, b) => b.rev - a.rev).map(c => { const base = custCur.get(c.name); const gg = base ? growth(c.rev, base.rev) : null; return `<span style="font-weight:500">${esc(c.name)}</span><div class="ex-track"><div style="width:${Math.max(2, c.rev / Math.max(...fcst.customers.map(x => x.rev)) * 100).toFixed(1)}%"></div></div><span class="ex-num ex-r">${esc(usd(c.rev))}</span><span class="ex-num ex-r ${gg == null ? 'ex-flat' : gg >= 0 ? 'ex-up' : 'ex-down'}">${gg == null ? '—' : signedPct(gg)}</span>`; }).join('')}
+                </div>
+                <p class="ex-note">Revenue del trimestre por cliente y variación vs ${esc(qLabel(k))}. Mensual: ${fcst.monthly.map(m => esc(m.label.toLowerCase()) + ' ' + esc(usd(m.rev))).join(' · ')}.</p>
+              </div>
+              ${FIN.levers && FIN.levers.items.length ? `<div style="display:flex; flex-direction:column; gap:10px; min-width:0;">
+                <b style="font-size:14px; font-weight:600;">Palancas desde ${esc(MESES[monthIdx(FIN.levers.month)].toLowerCase())}</b>
+                ${FIN.levers.items.map(l => `<div class="ex-watch-row"><span class="ex-chip flat">${esc(l.customer)}</span><span>${esc(l.text)}</span></div>`).join('')}
+              </div>` : ''}
+            </div>
+          </div>` : ''}
         </section>
 
         <section class="ex-sec" aria-labelledby="exOps">
           <div class="ex-head"><h2 class="ex-h2" id="exOps">Operational overview</h2></div>
+          ${OPS_ERROR ? `<div class="ex-state">No se pudieron cargar los datos operativos (${esc(OPS_ERROR)}). Recarga la página; si sigue pasando, revisa el webhook de n8n.</div>` : `
           <div class="ex-two">
             <div class="ex-card">
               <div class="ex-card-title"><b>País · ${esc(qLabel(k))}</b><span>${oPrev ? 'Marca = ' + esc(qLabel(pk)) : ''}</span></div>
               ${oCur ? `${meter('On time', oCur.onTime, oPrev && oPrev.onTime)}${meter('Fill rate <span style="color:var(--ex-muted)">(Cencosud y Superpet)</span>', oCur.fill, oPrev && oPrev.fill)}
               <div class="ex-stats">
                 <div class="ex-stat"><span>Pedidos</span><b class="ex-num">${count(oCur.orders)}</b></div>
-                <div class="ex-stat"><span>Δ pedidos</span><b class="ex-num ${dOrders.cls}">${esc(dOrders.txt.split(' vs ')[0])}</b></div>
+                <div class="ex-stat"><span>Δ pedidos</span><b class="ex-num ${dPct(growth(oCur.orders, oPrev && oPrev.orders)).cls}">${esc(dPct(growth(oCur.orders, oPrev && oPrev.orders)).txt)}</b></div>
                 <div class="ex-stat"><span>Clientes con datos</span><b class="ex-num">${opsRows.length}</b></div>
               </div>` : '<p class="ex-note">Sin datos operativos en este trimestre.</p>'}
             </div>
@@ -865,11 +926,11 @@ function loadEmbed(name){
               <div class="ex-card-title"><b>Por cliente · ${esc(qLabel(k))}</b><span>Estado = on time vs ${esc(qLabel(pk))}</span></div>
               ${opsRows.length ? `<div class="ex-table-wrap"><table class="ex-table">
                 <thead><tr><th>Cliente</th><th>Pedidos</th><th>On time</th><th>Δ on time</th><th>Fill rate</th><th>Estado</th></tr></thead>
-                <tbody class="ex-num">${opsRows.map(r => `<tr><td><a class="ex-link" style="color:var(--ex-ink)" href="#/${r.name.toLowerCase().replace(/\s+/g, '')}">${esc(r.name)}</a></td><td>${count(r.cur.orders)}</td><td>${pc(r.cur.onTime)}</td><td class="${r.dOt.cls}">${r.dOt.d == null ? '—' : esc(r.dOt.txt)}</td><td>${pc(r.cur.fill)}</td><td>${statusChip(r)}</td></tr>`).join('')}</tbody>
+                <tbody class="ex-num">${opsRows.map(r => `<tr><td><a class="ex-link" style="color:var(--ex-ink)" href="${r.href}">${esc(r.name)}</a></td><td>${count(r.cur.orders)}</td><td>${pc(r.cur.onTime)}</td><td class="${r.dOt.cls}">${r.dOt.d == null ? '—' : esc(r.dOt.txt)}</td><td>${pc(r.cur.fill)}</td><td>${chip(r)}</td></tr>`).join('')}</tbody>
               </table></div>
               <p class="ex-note">On time: entrega (D) en Cencosud y Superpet; on time general en Tottus y Plaza Vea. PedidosYa no reporta KPIs operativos.</p>` : '<p class="ex-note">Sin datos operativos por cliente en este trimestre.</p>'}
             </div>
-          </div>
+          </div>`}
         </section>
         </div>`;
     }
@@ -878,12 +939,19 @@ function loadEmbed(name){
       .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(json => {
         const rows = Array.isArray(json) ? json : (json && Array.isArray(json.data) ? json.data : []);
-        const fin = buildFinance(rows), ops = buildOps(rows);
-        const qs = availableQuarters(fin, ops);
-        if(!qs.length){ body.innerHTML = '<div class="ex-state">Todavía no hay datos financieros ni operativos para mostrar.</div>'; return; }
-        DATA = { fin, ops };
-        current = defaultQuarter(qs, fin);
-        renderQuarterBar(qs);
+        FIN = finFromRows(rows);
+        OPS = buildOps(rows);
+        // Trimestres cerrados del P&L (los tres meses presentes)
+        const set = new Set(FIN.country.months.map(m => qKey(+m.slice(0, 4), monthIdx(m))));
+        QUARTERS = [...set].filter(k => finCountry(FIN, k)).sort();
+        if(!QUARTERS.length){
+          const seen = [...new Set(rows.map(srcTag).filter(Boolean))];
+          console.warn('No hay un trimestre completo en las filas _source="pnl". Fuentes encontradas:', seen);
+          body.innerHTML = '<div class="ex-state">El webhook todavía no trae un trimestre financiero completo (filas con _source "pnl").</div>';
+          return;
+        }
+        current = QUARTERS[QUARTERS.length - 1];
+        renderQuarterBar();
         render();
       })
       .catch(err => {
