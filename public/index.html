@@ -377,67 +377,521 @@ function loadEmbed(name){
 </script>
 
   <!-- ===================== LANDING: Zubale PE ===================== -->
-  <div id="view-landing" class="page-view active theme-dash">
-    <div class="wrap">
-      <div style="padding:64px 0 10px; text-align:center;">
-        <img src="data:image/png;base64,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" alt="Zubale" style="height:96px; width:auto;">
-        <div style="font-family:'Lexend', sans-serif; color:var(--muted); font-size:14px; margin-top:10px;">¡Bienvenido!</div>
+  <!-- ===================== LANDING: tablero ejecutivo (resumen del ultimo Q, financial y operational) ===================== -->
+  <style>
+    #view-landing{
+      --ex-ink:#000859; --ex-ink-2:#4a5072; --ex-muted:#6b7194; --ex-line:#e3e8f7; --ex-line-2:#eef1f8;
+      --ex-bg:#f6f8fe; --ex-surface:#ffffff; --ex-blue:#0043fc; --ex-blue-strong:#073cac; --ex-blue-light:#75a2f7;
+      --ex-p-blue:#dfe9fd; --ex-p-yellow:#fefab3; --ex-p-green:#d7f7e2; --ex-p-pink:#fbe3f6; --ex-p-purple:#f3e2f8;
+      --ex-good:#1d6b3a; --ex-good-bg:#d7f7e2; --ex-warn:#6b5d00; --ex-warn-bg:#fefab3; --ex-bad:#b3261e; --ex-bad-bg:#fbdcd9;
+      background:var(--ex-bg); color:var(--ex-ink); font-family:'Lexend', system-ui, -apple-system, sans-serif; min-height:100vh;
+    }
+    #view-landing *{box-sizing:border-box;}
+    .ex-num{font-variant-numeric:tabular-nums;}
+    .ex-top{background:var(--ex-surface); border-bottom:1px solid var(--ex-line);}
+    .ex-top-in{max-width:1280px; margin:0 auto; padding:16px 32px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;}
+    .ex-brand{display:flex; align-items:center; gap:16px;}
+    .ex-brand img{height:28px; width:auto; display:block;}
+    .ex-brand .ex-sep{width:1px; height:24px; background:#dfe3f0;}
+    .ex-brand span{font-size:15px; font-weight:500;}
+    .ex-q{display:flex; flex-wrap:wrap; background:#eef2fc; border-radius:999px; padding:4px; gap:2px;}
+    .ex-q button{font:inherit; font-size:13px; font-weight:500; color:var(--ex-ink-2); background:none; border:0; padding:8px 14px; border-radius:999px; cursor:pointer;}
+    .ex-q button:hover{color:var(--ex-ink);}
+    .ex-q button[aria-pressed="true"]{background:var(--ex-blue); color:#fff; font-weight:600;}
+    .ex-q button:focus-visible, .ex-link:focus-visible, .ex-client:focus-visible{outline:2px solid var(--ex-blue); outline-offset:2px;}
+    .ex-main{max-width:1280px; margin:0 auto; padding:32px 32px 64px; display:flex; flex-direction:column; gap:40px;}
+    .ex-sec{display:flex; flex-direction:column; gap:16px;}
+    .ex-eyebrow{font-size:12px; font-weight:600; letter-spacing:.1em; color:#3974f6; text-transform:uppercase;}
+    .ex-h1{margin:0; font-size:32px; line-height:1.25; font-weight:600; max-width:920px; text-wrap:balance;}
+    .ex-h2{margin:0; font-size:22px; font-weight:600;}
+    .ex-head{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px;}
+    .ex-link{font-size:14px; font-weight:500; color:var(--ex-blue); text-decoration:none;}
+    .ex-link:hover{color:var(--ex-blue-strong);}
+    .ex-kpis{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px;}
+    .ex-kpi{border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:6px; min-width:0;}
+    .ex-kpi .ex-k-label{font-size:13px; font-weight:500;}
+    .ex-kpi .ex-k-val{font-size:30px; font-weight:700; line-height:1.1;}
+    .ex-kpi .ex-k-delta{font-size:13px; font-weight:500;}
+    .ex-two{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px;}
+    .ex-card{background:var(--ex-surface); border:1px solid var(--ex-line); border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:16px; min-width:0;}
+    .ex-card-title{display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; align-items:baseline;}
+    .ex-card-title b{font-size:15px; font-weight:600;}
+    .ex-card-title span{font-size:12px; color:var(--ex-muted);}
+    .ex-watch{background:var(--ex-surface); border:1px solid var(--ex-line); border-radius:16px; padding:20px 24px; display:flex; flex-direction:column; gap:12px;}
+    .ex-watch-row{display:flex; align-items:flex-start; gap:12px; font-size:14px; color:var(--ex-ink-2); line-height:1.5;}
+    .ex-chip{flex:none; font-size:11px; font-weight:600; padding:4px 8px; border-radius:999px; white-space:nowrap;}
+    .ex-chip.good{color:var(--ex-good); background:var(--ex-good-bg);}
+    .ex-chip.warn{color:var(--ex-warn); background:var(--ex-warn-bg);}
+    .ex-chip.bad{color:var(--ex-bad); background:var(--ex-bad-bg);}
+    .ex-chip.flat{color:var(--ex-ink-2); background:var(--ex-line-2);}
+    .ex-up{color:var(--ex-good);} .ex-down{color:var(--ex-bad);} .ex-flat{color:var(--ex-muted);}
+    .ex-bars{position:relative; height:180px; display:flex; align-items:flex-end; gap:32px; padding:0 24px; border-bottom:1px solid #dfe3f0;}
+    .ex-bar{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%;}
+    .ex-bar span{font-size:13px; font-weight:600;}
+    .ex-bar div{width:100%; background:var(--ex-blue-light); border-radius:8px 8px 0 0; min-height:2px;}
+    .ex-bar.last div{background:var(--ex-blue);}
+    .ex-avg{position:absolute; left:0; right:0; border-top:2px dashed #a92dbf; opacity:.6;}
+    .ex-bar-labels{display:flex; gap:32px; padding:0 24px; font-size:12px; color:var(--ex-muted);}
+    .ex-bar-labels span{flex:1; text-align:center;}
+    .ex-stats{display:flex; gap:28px; flex-wrap:wrap; border-top:1px solid var(--ex-line-2); padding-top:14px;}
+    .ex-stat{display:flex; flex-direction:column; gap:2px;}
+    .ex-stat span{font-size:12px; color:var(--ex-muted);}
+    .ex-stat b{font-size:18px; font-weight:600;}
+    .ex-clients{display:grid; grid-template-columns:minmax(80px,110px) minmax(0,1fr) auto 56px 52px; align-items:center; gap:10px 12px; font-size:13px;}
+    .ex-clients .ex-hd{font-size:12px; color:var(--ex-muted);}
+    .ex-track{display:flex; align-items:center; gap:8px; min-width:0;}
+    .ex-track div{height:14px; background:var(--ex-blue-light); border-radius:4px; min-width:2px;}
+    .ex-track.neg div{background:#efa5e2;}
+    .ex-r{text-align:right;}
+    .ex-meter{display:flex; flex-direction:column; gap:6px;}
+    .ex-meter-top{display:flex; justify-content:space-between; gap:8px; font-size:13px;}
+    .ex-meter-track{height:10px; background:var(--ex-line-2); border-radius:999px; position:relative;}
+    .ex-meter-fill{height:100%; border-radius:999px; background:#72d28a;}
+    .ex-meter-fill.down{background:#e76ebe;}
+    .ex-meter-mark{position:absolute; top:-4px; width:2px; height:18px; background:var(--ex-ink);}
+    .ex-table-wrap{overflow-x:auto;}
+    .ex-table{width:100%; border-collapse:collapse; font-size:13px;}
+    .ex-table th{font-size:12px; font-weight:500; color:var(--ex-muted); padding:8px; text-align:right; white-space:nowrap;}
+    .ex-table td{padding:10px 8px; text-align:right; border-top:1px solid var(--ex-line-2); white-space:nowrap;}
+    .ex-table th:first-child, .ex-table td:first-child{text-align:left; padding-left:0;}
+    .ex-table th:last-child, .ex-table td:last-child{padding-right:0;}
+    .ex-table td:first-child{font-weight:500;}
+    /* Neutraliza las reglas globales de table/thead/tbody del portal dentro de la portada */
+    #view-landing .ex-table{min-width:0; font-size:13px;}
+    #view-landing .ex-table thead th{text-transform:none; letter-spacing:0; position:static; background:none; border-bottom:0; font-size:12px; color:var(--ex-muted);}
+    #view-landing .ex-table tbody td{border-bottom:0; font-family:inherit;}
+    #view-landing .ex-table tbody tr:hover, #view-landing .ex-table tbody tr:hover td{background:none;}
+    .ex-note{font-size:12px; color:var(--ex-muted); margin:0;}
+    .ex-access{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;}
+    .ex-client{display:flex; flex-direction:column; gap:4px; background:var(--ex-surface); border:1px solid var(--ex-line); border-radius:12px; padding:14px 16px; text-decoration:none; color:var(--ex-ink);}
+    .ex-client:hover{border-color:var(--ex-blue-light);}
+    .ex-client b{font-size:15px; font-weight:600;}
+    .ex-client span{font-size:12px; color:var(--ex-muted);}
+    .ex-client.featured{background:var(--ex-p-blue); border-color:var(--ex-p-blue);}
+    .ex-state{padding:48px 24px; text-align:center; color:var(--ex-muted); font-size:15px; background:var(--ex-surface); border:1px solid var(--ex-line); border-radius:16px;}
+    @media (max-width:1000px){ .ex-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} .ex-two{grid-template-columns:minmax(0,1fr);} }
+    @media (max-width:560px){ .ex-clients{grid-template-columns:minmax(0,1fr) auto 52px 48px;} .ex-clients .ex-track{display:none;} .ex-kpis{grid-template-columns:minmax(0,1fr);} .ex-top-in, .ex-main{padding-left:16px; padding-right:16px;} .ex-h1{font-size:24px;} .ex-bars, .ex-bar-labels{gap:12px; padding:0 4px;} }
+  </style>
+
+  <div id="view-landing" class="page-view active">
+    <header class="ex-top">
+      <div class="ex-top-in">
+        <div class="ex-brand">
+          <img src="assets/zubale-logo.png" alt="Zubale">
+          <span class="ex-sep" aria-hidden="true"></span>
+          <span>Tablero ejecutivo · Perú</span>
+        </div>
+        <div class="ex-q" id="exQuarters" role="group" aria-label="Trimestre"></div>
+      </div>
+    </header>
+
+    <main class="ex-main">
+      <div id="exBody">
+        <div class="ex-state">Cargando datos del trimestre…</div>
       </div>
 
-      <div class="client-grid-featured">
-        <a class="client-card" href="#/financials">
-          <div class="client-card-name">Financials</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">Country view</span>
-          </div>
-        </a>
-      </div>
-
-      <div class="client-grid">
-        <a class="client-card" href="#/cencosud">
-          <div class="client-card-name">Cencosud</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">P&amp;L</span>
-            <span class="client-card-tag tag-live">Operations</span>
-          </div>
-        </a>
-        <a class="client-card" href="#/pedidosya">
-          <div class="client-card-name">PedidosYa</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">P&amp;L</span>
-            <span class="client-card-tag tag-live">Operations</span>
-          </div>
-        </a>
-        <a class="client-card" href="#/tottus">
-          <div class="client-card-name">Tottus</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">P&amp;L</span>
-            <span class="client-card-tag tag-live">Operations</span>
-          </div>
-        </a>
-        <a class="client-card" href="#/plazavea">
-          <div class="client-card-name">Plaza Vea</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">P&amp;L</span>
-            <span class="client-card-tag tag-live">Operations</span>
-          </div>
-        </a>
-        <a class="client-card" href="#/superpet">
-          <div class="client-card-name">Superpet</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag tag-live">P&amp;L</span>
-            <span class="client-card-tag tag-live">Operations</span>
-          </div>
-        </a>
-        <a class="client-card" href="#/herbalife">
-          <div class="client-card-name">Herbalife</div>
-          <div class="client-card-tags">
-            <span class="client-card-tag">En construcción</span>
-          </div>
-        </a>
-      </div>
-    </div>
+      <section class="ex-sec" aria-labelledby="exAccessTitle">
+        <h2 class="ex-h2" id="exAccessTitle">Detalle por cliente</h2>
+        <nav class="ex-access" aria-label="Clientes">
+          <a class="ex-client featured" href="#/financials"><b>Financials</b><span>P&amp;L consolidado por cliente</span></a>
+          <a class="ex-client" href="#/cencosud"><b>Cencosud</b><span>P&amp;L · Operations</span></a>
+          <a class="ex-client" href="#/tottus"><b>Tottus</b><span>P&amp;L · Operations</span></a>
+          <a class="ex-client" href="#/plazavea"><b>Plaza Vea</b><span>P&amp;L · Operations</span></a>
+          <a class="ex-client" href="#/superpet"><b>Superpet</b><span>P&amp;L · Operations</span></a>
+          <a class="ex-client" href="#/pedidosya"><b>PedidosYa</b><span>P&amp;L</span></a>
+          <a class="ex-client" href="#/herbalife"><b>Herbalife</b><span>En construcción</span></a>
+        </nav>
+      </section>
+    </main>
   </div>
+
+  <script>
+  // Tablero ejecutivo de la portada. Lee /api/dashboard-data una vez y arma:
+  //  - Financial: filas del P&L (_source="pnl"), por Cliente, columnas de semana ISO.
+  //  - Operational: KPIs operativos de cada cliente (_source="opkpis<cliente>"), por fecha.
+  // Todo se agrupa por trimestre calendario y se compara contra el trimestre anterior.
+  (function(){
+    const root = document.getElementById('view-landing');
+    if(!root) return;
+    const body = document.getElementById('exBody');
+    const qBar = document.getElementById('exQuarters');
+
+    // Clientes conocidos: nombre visible, valores posibles de la columna "Cliente" del P&L
+    // (en minusculas) y la fuente de KPIs operativos con las columnas que usa cada una.
+    const CLIENTS = [
+      { name:'Cencosud',  fin:['cencosud pe','cencosud'], ops:{ tag:'opkpiscencosud', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' } },
+      { name:'Tottus',    fin:['tottus'],                 ops:{ tag:'opkpistottus',   date:'FECHA', orders:'# Pedidos Entregados', onTime:'% Ontime' } },
+      { name:'Plaza Vea', fin:['plaza vea'],              ops:{ tag:'opkpisplazavea', date:'Fecha', orders:'#Pedidos Entregados', onTime:'On time' } },
+      { name:'PedidosYa', fin:['pedidosya'],              ops:null },
+      { name:'Superpet',  fin:['superpet'],               ops:{ tag:'opkpissuperpet', date:'Fecha', orders:'Pedidos totales', onTime:'On time D', fill:'Fill Rate' } },
+    ];
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const MES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const norm = v => String(v == null ? '' : v).trim().toLowerCase();
+
+    // ---------- parseo ----------
+    function money(raw){
+      if(raw === undefined || raw === null) return 0;
+      if(typeof raw === 'number') return raw;
+      let v = String(raw).trim();
+      if(v === '' || v === '-') return 0;
+      let neg = false;
+      if(v.startsWith('(') && v.endsWith(')')){ neg = true; v = v.slice(1,-1); }
+      const n = parseFloat(v.replace(/,/g,'').replace('%','').trim());
+      return Number.isFinite(n) ? (neg ? -n : n) : 0;
+    }
+    function pct(raw){ // devuelve 0-100, o null si viene vacio
+      if(raw === undefined || raw === null) return null;
+      if(typeof raw === 'number') return raw <= 1 ? raw * 100 : raw;
+      const s = String(raw).trim();
+      if(s === '' || s === '-') return null;
+      const n = parseFloat(s.replace('%','').replace(',', '.'));
+      if(!Number.isFinite(n)) return null;
+      return (!s.includes('%') && n <= 1) ? n * 100 : n;
+    }
+    function int(raw){
+      if(raw === undefined || raw === null) return 0;
+      if(typeof raw === 'number') return raw;
+      const n = parseInt(String(raw).replace(/[^\d-]/g,''), 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function isoDate(raw){
+      if(!raw) return null;
+      const s = String(raw).trim();
+      let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(m) return { y:+m[1], m:+m[2]-1 };
+      m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if(m) return { y:+m[3], m:+m[2]-1 };
+      return null;
+    }
+    // Mes de una columna de semana del P&L ("28", "27.1", "27.2"): misma regla que el bundle P&L
+    // (jueves de la semana ISO; lunes para ".1", domingo para ".2").
+    function weekMonth(key, year){
+      const m = String(key).match(/^(\d+)(?:\.(\d))?$/);
+      if(!m) return null;
+      const week = +m[1], wd = m[2] === '1' ? 1 : m[2] === '2' ? 7 : 4;
+      const jan4 = new Date(Date.UTC(year, 0, 4));
+      const mon1 = new Date(jan4); mon1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1));
+      const d = new Date(mon1); d.setUTCDate(mon1.getUTCDate() + (week - 1) * 7 + (wd - 1));
+      return { y:d.getUTCFullYear(), m:d.getUTCMonth(), end:new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + (wd === 4 ? 3 : 0))) };
+    }
+    const qKey = (y, m) => y + '-Q' + (Math.floor(m / 3) + 1);
+    const qLabel = k => { const [y, q] = k.split('-'); return q + ' ' + y; };
+    function qMonths(k){ const [y, q] = k.split('-Q'); const m0 = (+q - 1) * 3; return [0,1,2].map(i => ({ y:+y, m:m0 + i })); }
+    function prevQ(k){ let [y, q] = k.split('-Q').map(Number); q--; if(q === 0){ q = 4; y--; } return y + '-Q' + q; }
+
+    function srcTag(r){ return (r && typeof r._source === 'string') ? r._source : (r && r._source && r._source._source) || ''; }
+    function flat(r){ return (r && typeof r._source === 'object') ? r._source : r; }
+    function clientOf(raw){
+      const n = norm(raw);
+      const c = CLIENTS.find(c => c.fin.includes(n));
+      return c ? c.name : String(raw || '').trim();
+    }
+
+    // ---------- financial: Revenue y Gross Profit por cliente y mes ----------
+    function buildFinance(rows){
+      const year = new Date().getFullYear();
+      const byClient = new Map(); // cliente -> filas
+      rows.forEach(r => {
+        const tag = srcTag(r);
+        if(tag !== 'pnl' && tag !== 'cencosud') return; // "cencosud" era el tag anterior del P&L
+        const f = flat(r);
+        if(norm(f['Cliente']) === 'todos') return; // consolidado: se recalcula sumando clientes
+        const name = clientOf(f['Cliente']);
+        if(!name) return;
+        if(!byClient.has(name)) byClient.set(name, []);
+        byClient.get(name).push(f);
+      });
+      const out = new Map(); // "cliente|y-m" -> {rev, gp}
+      let maxEnd = null;
+      byClient.forEach((list, name) => {
+        // Una fila "TOTAL" junto a tiendas reales es redundante; si es la unica tienda, se usa.
+        const stores = new Set(list.map(f => String(f['Tienda'] || '').trim()).filter(Boolean));
+        const skipTotal = stores.size > 1 && stores.has('TOTAL');
+        const vert = f => { const c = String(f['Vertical'] ?? f['PICKING'] ?? '').trim().toUpperCase(); return c.startsWith('TODO') ? 'TODO' : c.startsWith('PICKING') ? 'PICKING' : c.startsWith('DELIVERY') ? 'DELIVERY' : c; };
+        const hasTodo = list.some(f => vert(f) === 'TODO');
+        list.forEach(f => {
+          if(skipTotal && String(f['Tienda'] || '').trim() === 'TOTAL') return;
+          const v = vert(f);
+          if(hasTodo ? v !== 'TODO' : (v !== 'PICKING' && v !== 'DELIVERY')) return;
+          const concept = String(f['Concepto'] || '').trim();
+          if(concept !== 'Revenue' && concept !== 'Gross Profit') return;
+          Object.keys(f).forEach(k => {
+            if(!/^\d+(\.\d+)?$/.test(k)) return;
+            const wm = weekMonth(k, year);
+            if(!wm) return;
+            const val = money(f[k]);
+            const key = name + '|' + wm.y + '-' + wm.m;
+            if(!out.has(key)) out.set(key, { rev:0, gp:0 });
+            out.get(key)[concept === 'Revenue' ? 'rev' : 'gp'] += val;
+            if(val !== 0 && (!maxEnd || wm.end > maxEnd)) maxEnd = wm.end;
+          });
+        });
+      });
+      return { cells: out, clients: [...byClient.keys()], maxEnd };
+    }
+    function finFor(fin, client, months){
+      let rev = 0, gp = 0, has = false;
+      months.forEach(({ y, m }) => {
+        const names = client ? [client] : fin.clients;
+        names.forEach(n => { const c = fin.cells.get(n + '|' + y + '-' + m); if(c){ rev += c.rev; gp += c.gp; has = has || c.rev !== 0; } });
+      });
+      return has ? { rev, gp, margin: rev ? gp / rev * 100 : null } : null;
+    }
+
+    // ---------- operational: pedidos, on time y fill rate por cliente y trimestre ----------
+    function buildOps(rows){
+      const out = new Map(); // "cliente|qKey" -> acumulados
+      const quarters = new Set();
+      CLIENTS.forEach(c => {
+        if(!c.ops) return;
+        rows.forEach(r => {
+          if(srcTag(r) !== c.ops.tag) return;
+          const f = flat(r);
+          const d = isoDate(f[c.ops.date]);
+          if(!d) return;
+          const orders = int(f[c.ops.orders]);
+          const k = qKey(d.y, d.m);
+          quarters.add(k);
+          const key = c.name + '|' + k;
+          if(!out.has(key)) out.set(key, { orders:0, otW:0, otN:0, fW:0, fN:0 });
+          const a = out.get(key);
+          a.orders += orders;
+          const ot = pct(f[c.ops.onTime]);
+          if(ot != null && orders > 0){ a.otW += ot * orders; a.otN += orders; }
+          if(c.ops.fill){ const fr = pct(f[c.ops.fill]); if(fr != null && orders > 0){ a.fW += fr * orders; a.fN += orders; } }
+        });
+      });
+      return { cells: out, quarters };
+    }
+    function opsFor(ops, clientNames, k){
+      const a = { orders:0, otW:0, otN:0, fW:0, fN:0 }; let has = false;
+      clientNames.forEach(n => { const c = ops.cells.get(n + '|' + k); if(c){ has = true; for(const x in a) a[x] += c[x]; } });
+      if(!has) return null;
+      return { orders:a.orders, onTime:a.otN ? a.otW / a.otN : null, fill:a.fN ? a.fW / a.fN : null };
+    }
+
+    // ---------- formato ----------
+    function soles(v){
+      if(v == null) return '—';
+      const a = Math.abs(v), sign = v < 0 ? '−' : '';
+      if(a >= 1e6) return sign + 'S/ ' + (a / 1e6).toLocaleString('es-PE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' M';
+      if(a >= 1e3) return sign + 'S/ ' + (a / 1e3).toLocaleString('es-PE', { maximumFractionDigits:1 }) + ' k';
+      return sign + 'S/ ' + a.toLocaleString('es-PE', { maximumFractionDigits:0 });
+    }
+    const count = v => v == null ? '—' : Math.round(v).toLocaleString('es-PE');
+    const pc = v => v == null ? '—' : v.toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
+    function growth(cur, prev){ return (cur == null || prev == null || !prev) ? null : (cur - prev) / Math.abs(prev) * 100; }
+    function deltaPct(d, suffix, emptyTxt){ // variacion relativa
+      if(d == null) return { txt:emptyTxt || 'Sin trimestre anterior', cls:'ex-flat' };
+      const s = (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString('es-PE', { maximumFractionDigits:1 }) + '%' + (suffix || '');
+      return { txt:s, cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down' };
+    }
+    function deltaPp(cur, prev, suffix){ // variacion en puntos porcentuales
+      if(cur == null || prev == null) return { txt:'Sin trimestre anterior', cls:'ex-flat', d:null };
+      const d = cur - prev;
+      const s = (Math.abs(d) < 0.05 ? '= ' : d > 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' pp' + (suffix || '');
+      return { txt:s, cls: Math.abs(d) < 0.05 ? 'ex-flat' : d > 0 ? 'ex-up' : 'ex-down', d };
+    }
+
+    // ---------- render ----------
+    let DATA = null, current = null;
+
+    function availableQuarters(fin, ops){
+      const set = new Set(ops.quarters);
+      fin.cells.forEach((v, key) => { if(v.rev !== 0){ const [y, m] = key.split('|')[1].split('-').map(Number); set.add(qKey(y, m)); } });
+      return [...set].sort();
+    }
+    // Ultimo trimestre cerrado: aquel cuyo ultimo dia ya esta cubierto por los datos del P&L.
+    function defaultQuarter(qs, fin){
+      if(!qs.length) return null;
+      if(fin.maxEnd){
+        const closed = qs.filter(k => { const ms = qMonths(k); const last = ms[2]; const end = new Date(Date.UTC(last.y, last.m + 1, 0)); return fin.maxEnd >= end; });
+        if(closed.length) return closed[closed.length - 1];
+      }
+      return qs[qs.length - 1];
+    }
+
+    function renderQuarterBar(qs){
+      const shown = qs.slice(-4);
+      qBar.innerHTML = shown.map(k => `<button type="button" data-q="${k}" aria-pressed="${k === current}">${esc(qLabel(k))}</button>`).join('');
+      qBar.onclick = e => { const b = e.target.closest('button'); if(!b) return; current = b.dataset.q; renderQuarterBar(qs); render(); };
+    }
+
+    function render(){
+      const { fin, ops } = DATA;
+      const k = current, pk = prevQ(k);
+      const months = qMonths(k), pMonths = qMonths(pk);
+      const opsNames = CLIENTS.filter(c => c.ops).map(c => c.name);
+      const cur = finFor(fin, null, months), prev = finFor(fin, null, pMonths);
+      const lastMonthWithData = months.filter(({ y, m }) => fin.clients.some(n => { const c = fin.cells.get(n + '|' + y + '-' + m); return c && c.rev !== 0; }));
+      // Trimestre en curso: sus totales (revenue, pedidos) no se comparan contra un trimestre completo.
+      const inProgress = !fin.maxEnd || fin.maxEnd < new Date(Date.UTC(months[2].y, months[2].m + 1, 0));
+      const totalGrowth = (c, p) => inProgress ? null : growth(c, p);
+      const oCur = opsFor(ops, opsNames, k), oPrev = opsFor(ops, opsNames, pk);
+      const rangeTxt = MESES[months[0].m] + '–' + MESES[months[2].m] + ' ' + months[0].y;
+
+      // Titular del trimestre
+      const parts = [];
+      const g = totalGrowth(cur && cur.rev, prev && prev.rev);
+      if(cur){
+        if(g != null) parts.push(`Revenue ${g >= 0 ? 'creció' : 'cayó'} ${Math.abs(g).toLocaleString('es-PE', { maximumFractionDigits:1 })}% vs ${qLabel(pk)}`);
+        else parts.push(`Revenue ${inProgress ? 'acumulado' : 'de'} ${soles(cur.rev)}`);
+        if(cur.margin != null){
+          if(prev && prev.margin != null) parts.push(`el margen bruto ${cur.margin >= prev.margin ? 'subió' : 'bajó'} a ${pc(cur.margin)}`);
+          else parts.push(`margen bruto de ${pc(cur.margin)}`);
+        }
+      }
+      let headline = parts.length ? parts.join(' y ') + '.' : 'Aún no hay datos financieros para este trimestre.';
+      if(oCur && oCur.onTime != null){
+        if(oPrev && oPrev.onTime != null) headline += ` On time ${oCur.onTime >= oPrev.onTime ? 'mejoró' : 'bajó'} a ${pc(oCur.onTime)}.`;
+        else headline += ` On time de ${pc(oCur.onTime)}.`;
+      }
+
+      // KPIs
+      const enCurso = inProgress ? 'Trimestre en curso' : null;
+      const dRev = deltaPct(g, ' vs ' + qLabel(pk), enCurso);
+      const dMargin = deltaPp(cur && cur.margin, prev && prev.margin);
+      const dOrders = deltaPct(totalGrowth(oCur && oCur.orders, oPrev && oPrev.orders), ' vs ' + qLabel(pk), enCurso);
+      const dOt = deltaPp(oCur && oCur.onTime, oPrev && oPrev.onTime, ' vs ' + qLabel(pk));
+
+      // Por cliente (financial)
+      const finRows = fin.clients.map(n => {
+        const c = finFor(fin, n, months), p = finFor(fin, n, pMonths);
+        return { name:n, cur:c, g:totalGrowth(c && c.rev, p && p.rev) };
+      }).filter(r => r.cur).sort((a, b) => b.cur.rev - a.cur.rev);
+      const maxRev = Math.max(1, ...finRows.map(r => r.cur.rev));
+
+      // Por cliente (operational)
+      const opsRows = CLIENTS.filter(c => c.ops).map(c => {
+        const o = opsFor(ops, [c.name], k), p = opsFor(ops, [c.name], pk);
+        return { name:c.name, cur:o, prev:p, dOt:deltaPp(o && o.onTime, p && p.onTime) };
+      }).filter(r => r.cur);
+
+      // Lo que hay que mirar
+      const watch = [];
+      const growers = finRows.filter(r => r.g != null).sort((a, b) => b.g - a.g);
+      if(growers.length && growers[0].g > 0) watch.push({ cls:'good', tag:'CRECE', txt:`${growers[0].name} es el cliente que más crece: revenue +${growers[0].g.toLocaleString('es-PE', { maximumFractionDigits:1 })}% vs ${qLabel(pk)}, con margen de ${pc(growers[0].cur.margin)}.` });
+      const otRows = opsRows.filter(r => r.cur.onTime != null).sort((a, b) => a.cur.onTime - b.cur.onTime);
+      if(otRows.length) watch.push({ cls:'warn', tag:'ATENCIÓN', txt:`${otRows[0].name} tiene el on time más bajo del trimestre (${pc(otRows[0].cur.onTime)})${otRows[0].dOt.d != null ? ', ' + (otRows[0].dOt.d >= 0 ? 'mejora' : 'baja') + ' ' + Math.abs(otRows[0].dOt.d).toLocaleString('es-PE', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' pp vs ' + qLabel(pk) : ''}.` });
+      const fallers = growers.filter(r => r.g < 0).sort((a, b) => a.g - b.g);
+      if(fallers.length) watch.push({ cls:'bad', tag:'RIESGO', txt:`${fallers[0].name} cae ${Math.abs(fallers[0].g).toLocaleString('es-PE', { maximumFractionDigits:1 })}% en revenue vs ${qLabel(pk)}.` });
+      else {
+        const lowM = finRows.filter(r => r.cur.margin != null).sort((a, b) => a.cur.margin - b.cur.margin)[0];
+        if(lowM && finRows.length > 1) watch.push({ cls:'bad', tag:'MARGEN', txt:`${lowM.name} tiene el margen bruto más bajo del portafolio (${pc(lowM.cur.margin)}).` });
+      }
+
+      // Revenue mensual del pais en el trimestre + promedio mensual del trimestre anterior
+      const monthly = months.map(({ y, m }) => { const c = finFor(fin, null, [{ y, m }]); return { label:MESES[m], rev:c ? c.rev : null }; });
+      const prevAvg = prev ? prev.rev / 3 : null;
+      const scaleMax = Math.max(1, ...monthly.map(x => x.rev || 0), prevAvg || 0) * 1.08;
+      const lastIdx = monthly.map(x => x.rev != null).lastIndexOf(true);
+
+      const kpi = (bg, labelColor, label, val, d) => `<div class="ex-kpi" style="background:${bg}"><span class="ex-k-label" style="color:${labelColor}">${label}</span><span class="ex-k-val ex-num">${val}</span><span class="ex-k-delta ${d.cls}">${esc(d.txt)}</span></div>`;
+      const meter = (label, v, p) => {
+        if(v == null) return '';
+        const down = p != null && v < p;
+        return `<div class="ex-meter"><div class="ex-meter-top"><span>${label}</span><span class="ex-num"><b>${pc(v)}</b>${p != null ? ` <span style="color:var(--ex-muted)">· ${qLabel(pk)} ${pc(p)}</span>` : ''}</span></div>
+          <div class="ex-meter-track"><div class="ex-meter-fill${down ? ' down' : ''}" style="width:${Math.max(0, Math.min(100, v))}%"></div>${p != null ? `<div class="ex-meter-mark" style="left:${Math.max(0, Math.min(100, p))}%" title="${qLabel(pk)}"></div>` : ''}</div></div>`;
+      };
+      const statusChip = r => {
+        if(r.dOt.d == null) return '<span class="ex-chip flat">Sin comparación</span>';
+        if(r.dOt.d >= 0.5) return '<span class="ex-chip good">Mejora</span>';
+        if(r.dOt.d <= -0.5) return '<span class="ex-chip bad">Empeora</span>';
+        return '<span class="ex-chip warn">Estable</span>';
+      };
+
+      body.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:40px;">
+        <section class="ex-sec" aria-labelledby="exResumen">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <span class="ex-eyebrow">Resumen ejecutivo · ${esc(qLabel(k))} (${esc(rangeTxt)})${inProgress ? ' · en curso' : ''}</span>
+            <h1 class="ex-h1" id="exResumen">${esc(headline)}</h1>
+            ${inProgress ? `<p class="ex-note">El trimestre aún no termina: el P&amp;L tiene datos hasta ${lastMonthWithData.length ? esc(MESES[lastMonthWithData[lastMonthWithData.length - 1].m].toLowerCase()) : 'ahora'}.</p>` : ''}
+          </div>
+          <div class="ex-kpis">
+            ${kpi('var(--ex-p-blue)', 'var(--ex-blue-strong)', 'Revenue', soles(cur && cur.rev), dRev)}
+            ${kpi('var(--ex-p-yellow)', 'var(--ex-warn)', 'Gross profit', soles(cur && cur.gp), { txt:'Margen ' + pc(cur && cur.margin) + (dMargin.d != null ? ' · ' + dMargin.txt : ''), cls:dMargin.cls })}
+            ${kpi('var(--ex-p-green)', 'var(--ex-good)', 'Pedidos', count(oCur && oCur.orders), dOrders)}
+            ${kpi('var(--ex-p-pink)', '#a72774', 'On time', pc(oCur && oCur.onTime), dOt)}
+          </div>
+          ${watch.length ? `<div class="ex-watch"><b style="font-size:14px; font-weight:600;">Lo que hay que mirar</b>${watch.map(w => `<div class="ex-watch-row"><span class="ex-chip ${w.cls}">${w.tag}</span><span>${esc(w.txt)}</span></div>`).join('')}</div>` : ''}
+        </section>
+
+        <section class="ex-sec" aria-labelledby="exFin">
+          <div class="ex-head"><h2 class="ex-h2" id="exFin">Financial overview</h2><a class="ex-link" href="#/financials">Ver P&amp;L completo →</a></div>
+          <div class="ex-two">
+            <div class="ex-card">
+              <div class="ex-card-title"><b>País · Revenue mensual</b><span>${prevAvg != null ? 'Línea = promedio mensual ' + esc(qLabel(pk)) : ''}</span></div>
+              <div class="ex-bars">
+                ${prevAvg != null ? `<div class="ex-avg" style="bottom:${(prevAvg / scaleMax * 100).toFixed(1)}%" title="Promedio mensual ${esc(qLabel(pk))}: ${esc(soles(prevAvg))}"></div>` : ''}
+                ${monthly.map((x, i) => `<div class="ex-bar${i === lastIdx ? ' last' : ''}"><div style="height:${x.rev ? (x.rev / scaleMax * 100).toFixed(1) : 0}%" title="${esc(x.label)}: ${esc(soles(x.rev))}"></div></div>`).join('')}
+              </div>
+              <div class="ex-bar-labels">${monthly.map(x => `<span>${esc(x.label)}<br><b class="ex-num" style="font-size:14px; color:var(--ex-ink)">${x.rev != null ? esc(soles(x.rev)) : '—'}</b></span>`).join('')}</div>
+              <div class="ex-stats">
+                <div class="ex-stat"><span>Gross profit</span><b class="ex-num">${soles(cur && cur.gp)}</b></div>
+                <div class="ex-stat"><span>Margen bruto</span><b class="ex-num">${pc(cur && cur.margin)}</b></div>
+                <div class="ex-stat"><span>Costo total</span><b class="ex-num">${soles(cur ? cur.rev - cur.gp : null)}</b></div>
+              </div>
+            </div>
+            <div class="ex-card">
+              <div class="ex-card-title"><b>Por cliente · Revenue ${esc(qLabel(k))}</b><span>Margen · Δ vs ${esc(qLabel(pk))}</span></div>
+              ${finRows.length ? `<div class="ex-clients">
+                ${finRows.map(r => `<span style="font-weight:500">${esc(r.name)}</span>
+                  <div class="ex-track${r.g != null && r.g < 0 ? ' neg' : ''}"><div style="width:${Math.max(2, r.cur.rev / maxRev * 100).toFixed(1)}%"></div></div>
+                  <span class="ex-num ex-r">${esc(soles(r.cur.rev))}</span>
+                  <span class="ex-num ex-r">${pc(r.cur.margin)}</span>
+                  <span class="ex-num ex-r ${r.g == null ? 'ex-flat' : r.g >= 0 ? 'ex-up' : 'ex-down'}">${r.g == null ? '—' : (r.g >= 0 ? '+' : '−') + Math.abs(r.g).toLocaleString('es-PE', { maximumFractionDigits:0 }) + '%'}</span>`).join('')}
+              </div>` : '<p class="ex-note">Sin datos financieros por cliente en este trimestre.</p>'}
+            </div>
+          </div>
+        </section>
+
+        <section class="ex-sec" aria-labelledby="exOps">
+          <div class="ex-head"><h2 class="ex-h2" id="exOps">Operational overview</h2></div>
+          <div class="ex-two">
+            <div class="ex-card">
+              <div class="ex-card-title"><b>País · ${esc(qLabel(k))}</b><span>${oPrev ? 'Marca = ' + esc(qLabel(pk)) : ''}</span></div>
+              ${oCur ? `${meter('On time', oCur.onTime, oPrev && oPrev.onTime)}${meter('Fill rate <span style="color:var(--ex-muted)">(Cencosud y Superpet)</span>', oCur.fill, oPrev && oPrev.fill)}
+              <div class="ex-stats">
+                <div class="ex-stat"><span>Pedidos</span><b class="ex-num">${count(oCur.orders)}</b></div>
+                <div class="ex-stat"><span>Δ pedidos</span><b class="ex-num ${dOrders.cls}">${esc(dOrders.txt.split(' vs ')[0])}</b></div>
+                <div class="ex-stat"><span>Clientes con datos</span><b class="ex-num">${opsRows.length}</b></div>
+              </div>` : '<p class="ex-note">Sin datos operativos en este trimestre.</p>'}
+            </div>
+            <div class="ex-card">
+              <div class="ex-card-title"><b>Por cliente · ${esc(qLabel(k))}</b><span>Estado = on time vs ${esc(qLabel(pk))}</span></div>
+              ${opsRows.length ? `<div class="ex-table-wrap"><table class="ex-table">
+                <thead><tr><th>Cliente</th><th>Pedidos</th><th>On time</th><th>Δ on time</th><th>Fill rate</th><th>Estado</th></tr></thead>
+                <tbody class="ex-num">${opsRows.map(r => `<tr><td><a class="ex-link" style="color:var(--ex-ink)" href="#/${r.name.toLowerCase().replace(/\s+/g, '')}">${esc(r.name)}</a></td><td>${count(r.cur.orders)}</td><td>${pc(r.cur.onTime)}</td><td class="${r.dOt.cls}">${r.dOt.d == null ? '—' : esc(r.dOt.txt)}</td><td>${pc(r.cur.fill)}</td><td>${statusChip(r)}</td></tr>`).join('')}</tbody>
+              </table></div>
+              <p class="ex-note">On time: entrega (D) en Cencosud y Superpet; on time general en Tottus y Plaza Vea. PedidosYa no reporta KPIs operativos.</p>` : '<p class="ex-note">Sin datos operativos por cliente en este trimestre.</p>'}
+            </div>
+          </div>
+        </section>
+        </div>`;
+    }
+
+    fetch('/api/dashboard-data', { cache:'no-store' })
+      .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(json => {
+        const rows = Array.isArray(json) ? json : (json && Array.isArray(json.data) ? json.data : []);
+        const fin = buildFinance(rows), ops = buildOps(rows);
+        const qs = availableQuarters(fin, ops);
+        if(!qs.length){ body.innerHTML = '<div class="ex-state">Todavía no hay datos financieros ni operativos para mostrar.</div>'; return; }
+        DATA = { fin, ops };
+        current = defaultQuarter(qs, fin);
+        renderQuarterBar(qs);
+        render();
+      })
+      .catch(err => {
+        console.error('No se pudo cargar el tablero ejecutivo:', err);
+        body.innerHTML = '<div class="ex-state">No se pudieron cargar los datos (' + esc(err.message) + '). Recarga la página; si sigue pasando, revisa el webhook de n8n.</div>';
+      });
+  })();
+  </script>
 
   <!-- ===================== CENCOSUD: dashboard P&L (app independiente en iframe) ===================== -->
   <div id="view-cencosud" class="page-view theme-dash">
@@ -648,6 +1102,9 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   const CLIENT_NAMES = {
     herbalife: 'Herbalife'
   };
+
+  // Filas del P&L en el webhook: hoy llegan con _source="pnl"; "cencosud" era el tag anterior.
+  function isPnlRow(r){ return !!r && (r._source === 'pnl' || r._source === 'cencosud'); }
 
   function showView(id){
     document.querySelectorAll('.page-view').forEach(v=>v.classList.remove('active'));
@@ -930,7 +1387,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   const cencosudPLLoaded = new Set();
 
   // Carga (una sola vez por cliente) el bundle P&L en el iframe indicado, filtrando
-  // las filas del webhook por _source="cencosud" (la hoja "output" compartida) Y por
+  // las filas del webhook por _source="pnl" (la hoja "output" compartida) Y por
   // Normaliza el valor de la columna "Cliente" (quita espacios sobrantes y unifica
   // mayusculas/minusculas) antes de comparar, ya que la hoja puede traer variantes
   // como "Plaza Vea " (con espacio al final) o "PEDIDOSYA" en mayusculas.
@@ -954,7 +1411,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
         if(res.ok){
           const json = await res.json();
           const rows = Array.isArray(json) ? json : [];
-          const clientRows = remapSoloTotalStore(rows.filter(r => r && r._source === 'cencosud' && normalizeClienteValue(r['Cliente']) === targetCliente));
+          const clientRows = remapSoloTotalStore(rows.filter(r => isPnlRow(r) && normalizeClienteValue(r['Cliente']) === targetCliente));
           if(clientRows.length > 0){
             const periodKeys = derivePeriodKeys(clientRows);
             if(periodKeys.length > 0){
@@ -971,8 +1428,8 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
               console.warn('No se detectaron columnas de semana para Cliente="' + cfg.cliente + '"; se usan los datos de ejemplo del bundle.');
             }
           } else {
-            const seen = Array.from(new Set(rows.filter(r => r && r._source === 'cencosud').map(r => r && r['Cliente']))).slice(0, 20);
-            console.warn('El webhook aun no trae filas con _source="cencosud" y Cliente="' + cfg.cliente + '"; se muestran los datos de ejemplo del bundle. Valores de Cliente encontrados:', seen);
+            const seen = Array.from(new Set(rows.filter(r => isPnlRow(r)).map(r => r && r['Cliente']))).slice(0, 20);
+            console.warn('El webhook aun no trae filas con _source="pnl" y Cliente="' + cfg.cliente + '"; se muestran los datos de ejemplo del bundle. Valores de Cliente encontrados:', seen);
           }
         }
       }catch(fetchErr){
@@ -1029,13 +1486,13 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
         if(res.ok){
           const json = await res.json();
           const rows = Array.isArray(json) ? json : [];
-          // En modo "Todos" tomamos TODAS las filas de _source="cencosud" (los 4
+          // En modo "Todos" tomamos TODAS las filas de _source="pnl" (los 4
           // clientes retail), sin filtrar por Cliente, y agrupamos por Cliente en
           // vez de por Tienda -- asi el grafico "Ingresos por Tienda" pasa a
           // mostrar el % de participacion de cada cliente dentro del total.
           let clientRows = isConsolidated
-            ? rows.filter(r => r && r._source === 'cencosud' && normalizeClienteValue(r['Cliente']) !== 'todos')
-            : remapSoloTotalStore(rows.filter(r => r && r._source === 'cencosud' && normalizeClienteValue(r['Cliente']) === targetCliente));
+            ? rows.filter(r => isPnlRow(r) && normalizeClienteValue(r['Cliente']) !== 'todos')
+            : remapSoloTotalStore(rows.filter(r => isPnlRow(r) && normalizeClienteValue(r['Cliente']) === targetCliente));
           if(isConsolidated){
             clientRows = clientRows.map(r => Object.assign({}, r, { 'Tienda': r['Cliente'] || 'Sin cliente' }));
           }
@@ -1058,8 +1515,8 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
               console.warn('No se detectaron columnas de semana para Cliente="' + opt.cliente + '"; se usan los datos de ejemplo del bundle.');
             }
           } else {
-            const seen = Array.from(new Set(rows.filter(r => r && r._source === 'cencosud').map(r => r && r['Cliente']))).slice(0, 20);
-            console.warn('El webhook aun no trae filas con _source="cencosud" y Cliente="' + opt.cliente + '"; se muestran los datos de ejemplo del bundle. Valores de Cliente encontrados:', seen);
+            const seen = Array.from(new Set(rows.filter(r => isPnlRow(r)).map(r => r && r['Cliente']))).slice(0, 20);
+            console.warn('El webhook aun no trae filas con _source="pnl" y Cliente="' + opt.cliente + '"; se muestran los datos de ejemplo del bundle. Valores de Cliente encontrados:', seen);
           }
         }
       }catch(fetchErr){
