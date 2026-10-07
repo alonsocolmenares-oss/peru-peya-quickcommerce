@@ -399,7 +399,6 @@ function loadEmbed(name){
           <div class="client-card-tags">
             <span class="client-card-tag tag-live">P&amp;L</span>
             <span class="client-card-tag tag-live">Operations</span>
-            <span class="client-card-tag tag-live">Productividad</span>
           </div>
         </a>
         <a class="client-card" href="#/pedidosya">
@@ -449,11 +448,10 @@ function loadEmbed(name){
     <div class="ctab-bar" data-client="cencosud" data-view-prefix="">
       <button class="ctab-btn" data-ctab="pl">P&amp;L</button>
       <button class="ctab-btn" data-ctab="ops">Operations</button>
-      <button class="ctab-btn" data-ctab="productividad">Productividad</button>
     </div>
 
     <div id="ctab-panel-placeholder" class="ctab-panel active" style="padding:60px 24px; text-align:center; color:var(--muted, #6b6b85); font-family:'Lexend', sans-serif;">
-      <p style="font-size:15px; margin:0;">Elige una pestaña (P&amp;L, Operations o Productividad) para cargar los datos.</p>
+      <p style="font-size:15px; margin:0;">Elige una pestaña (P&amp;L u Operations) para cargar los datos.</p>
     </div>
 
     <div id="ctab-panel-pl" class="ctab-panel">
@@ -465,11 +463,6 @@ function loadEmbed(name){
       <iframe id="cencosudOpsFrame" title="Operations — Cencosud"
         style="width:100%; height:calc(100vh - 100px); border:none; display:block;"></iframe>
     </div>
-
-    <div id="ctab-panel-productividad" class="ctab-panel">
-      <iframe id="cencosudProductividadFrame" title="Productividad — Cencosud"
-        style="width:100%; height:calc(100vh - 100px); border:none; display:block;"></iframe>
-    </div>
   </div>
 
   <!-- Sub-dashboards: cada uno vive en public/embeds/ y se descarga con loadEmbed() la primera
@@ -478,8 +471,7 @@ function loadEmbed(name){
          cencosud-ops.html            Operations Cencosud    (_source=opkpiscencosud)
          tottus-ops.html              Operations Tottus      (_source=opkpistottus)
          plazavea-ops.html            Operations Plaza Vea   (_source=opkpisplazavea)
-         superpet-ops.html            Operations Superpet    (_source=opkpissuperpet)
-         cencosud-productividad.html  Productividad Cencosud (_source=productividadcencosud) -->
+         superpet-ops.html            Operations Superpet    (_source=opkpissuperpet) -->
 
   <!-- ===================== TOTTUS: dashboard P&L (reutiliza el bundle de Cencosud, filtrado por Cliente="Tottus") ===================== -->
   <div id="view-tottus" class="page-view theme-dash">
@@ -1098,19 +1090,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     }
   }
 
-  let productividadLoaded = false;
-
-  async function loadProductividadFrame(){
-    if(productividadLoaded) return;
-    try{
-      const html = await loadEmbed('cencosud-productividad');
-      document.getElementById('cencosudProductividadFrame').srcdoc = html;
-      productividadLoaded = true;
-    }catch(err){
-      console.error('No se pudo cargar el panel de Productividad de Cencosud:', err);
-    }
-  }
-
   // Operations para Tottus, Plaza Vea y Superpet: mismo patron que loadOperationsFrame de Cencosud
   // (bundle propio en embeds/, un iframe dedicado por cliente), pero parametrizado por clientKey ya
   // que los 3 comparten exactamente la misma estructura de panel (clon del de Cencosud, ver
@@ -1134,7 +1113,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     }
   }
 
-  // Tab-bar interno de cada tarjeta de cliente (P&L / Operations / Productividad). Usa sus propias
+  // Tab-bar interno de cada tarjeta de cliente (P&L / Operations). Usa sus propias
   // clases (.ctab-*) para no interferir con el tab-bar global (.tab-btn/.tab-panel) que usa PedidosYa.
   // Cada .ctab-bar declara su propio cliente y prefijo de panel (data-client/data-view-prefix) para
   // que el mismo manejador sirva para Cencosud, Tottus, Plaza Vea y Superpet sin colisionar ids.
@@ -1155,7 +1134,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
           if(client === 'cencosud') loadOperationsFrame();
           else loadClientOpsFrame(client);
         }
-        else if(ctab === 'productividad') loadProductividadFrame();
       });
     });
   });
